@@ -29,3 +29,11 @@ export function downloadText(filename: string, content: string, type = 'text/pla
   link.click()
   URL.revokeObjectURL(url)
 }
+
+export function parseOptionalNumber(value: string): number | undefined {
+  const trimmed = value.trim()
+  if (!trimmed) return undefined
+
+  const parsed = Number(trimmed)
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined
+}
