@@ -27,6 +27,7 @@ Phase 0: 立项与需求分析。
 - [用户流程与页面流转](D:/codex/webnovel-ide/docs/product/03-user-workflows.md)
 - [UI 信息架构](D:/codex/webnovel-ide/docs/product/04-ui-information-architecture.md)
 - [技术栈选型](D:/codex/webnovel-ide/docs/architecture/01-tech-stack.md)
+- [MVP 数据模型](D:/codex/webnovel-ide/docs/architecture/02-data-model.md)
 
 ## Planned Traceable Documents
 
