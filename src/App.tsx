@@ -1,0 +1,955 @@
+import { useEffect, useMemo, useState } from 'react'
+import type {
+  AITaskType,
+  Chapter,
+  ChapterStatus,
+  Character,
+  Project,
+  Setting,
+  SettingCategory,
+  SettingImportance,
+  Volume,
+  WebnovelIDEState,
+} from './types'
+import { loadState, saveState, seedProjectDefaults } from './storage'
+import { countWords, createId, formatDateTime, nowIso } from './utils'
+
+type MainView = 'chapter' | 'character' | 'setting'
+
+const chapterStatusLabels: Record<ChapterStatus, string> = {
+  draft: '草稿',
+  writing: '写作中',
+  revision: '待修改',
+  completed: '已完成',
+}
+
+const settingCategoryLabels: Record<SettingCategory, string> = {
+  world: '世界观',
+  faction: '势力',
+  power_system: '等级体系',
+  item: '道具',
+  location: '地点',
+  rule: '规则',
+  other: '其他',
+}
+
+const settingImportanceLabels: Record<SettingImportance, string> = {
+  low: '低',
+  medium: '中',
+  high: '高',
+}
+
+const aiTaskLabels: Record<AITaskType, string> = {
+  continue: '续写',
+  polish: '润色',
+  summarize: '总结',
+  rewrite: '改写',
+}
+
+export function App() {
+  const [state, setState] = useState<WebnovelIDEState>(() => loadState())
+  const [screen, setScreen] = useState<'projects' | 'workspace'>(
+    state.activeProjectId ? 'workspace' : 'projects',
+  )
+  const [mainView, setMainView] = useState<MainView>('chapter')
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string>()
+  const [selectedSettingId, setSelectedSettingId] = useState<string>()
+  const [createProjectOpen, setCreateProjectOpen] = useState(false)
+
+  useEffect(() => {
+    saveState(state)
+  }, [state])
+
+  const activeProject = state.projects.find((project) => project.id === state.activeProjectId)
+  const activeChapter = state.chapters.find((chapter) => chapter.id === state.activeChapterId)
+
+  function patchState(updater: (current: WebnovelIDEState) => WebnovelIDEState) {
+    setState((current) => updater(current))
+  }
+
+  function openProject(projectId: string) {
+    const firstChapter = state.chapters
+      .filter((chapter) => chapter.projectId === projectId)
+      .sort((a, b) => a.order - b.order)[0]
+
+    patchState((current) => ({
+      ...current,
+      activeProjectId: projectId,
+      activeChapterId: firstChapter?.id,
+    }))
+    setMainView('chapter')
+    setScreen('workspace')
+  }
+
+  function createProject(form: Pick<Project, 'title' | 'genre' | 'synopsis' | 'targetPlatform'>) {
+    const timestamp = nowIso()
+    const projectId = createId('project')
+    const nextState = seedProjectDefaults(
+      {
+        ...state,
+        projects: [
+          ...state.projects,
+          {
+            id: projectId,
+            userId: 'user_local',
+            title: form.title,
+            genre: form.genre,
+            synopsis: form.synopsis,
+            targetPlatform: form.targetPlatform,
+            status: 'writing',
+            createdAt: timestamp,
+            updatedAt: timestamp,
+          },
+        ],
+      },
+      projectId,
+    )
+
+    setState(nextState)
+    setCreateProjectOpen(false)
+    setScreen('workspace')
+    setMainView('chapter')
+  }
+
+  if (screen === 'projects' || !activeProject) {
+    return (
+      <ProjectsPage
+        state={state}
+        onCreateProject={() => setCreateProjectOpen(true)}
+        onOpenProject={openProject}
+        createProjectOpen={createProjectOpen}
+        onCloseCreateProject={() => setCreateProjectOpen(false)}
+        onSubmitProject={createProject}
+      />
+    )
+  }
+
+  return (
+    <WorkspacePage
+      state={state}
+      project={activeProject}
+      chapter={activeChapter}
+      mainView={mainView}
+      selectedCharacterId={selectedCharacterId}
+      selectedSettingId={selectedSettingId}
+      onBack={() => setScreen('projects')}
+      onPatchState={patchState}
+      onSelectChapter={(chapterId) => {
+        patchState((current) => ({ ...current, activeChapterId: chapterId }))
+        setMainView('chapter')
+      }}
+      onSelectCharacter={(characterId) => {
+        setSelectedCharacterId(characterId)
+        setMainView('character')
+      }}
+      onSelectSetting={(settingId) => {
+        setSelectedSettingId(settingId)
+        setMainView('setting')
+      }}
+      onSetMainView={setMainView}
+    />
+  )
+}
+
+interface ProjectsPageProps {
+  state: WebnovelIDEState
+  createProjectOpen: boolean
+  onCreateProject: () => void
+  onCloseCreateProject: () => void
+  onOpenProject: (projectId: string) => void
+  onSubmitProject: (form: Pick<Project, 'title' | 'genre' | 'synopsis' | 'targetPlatform'>) => void
+}
+
+function ProjectsPage(props: ProjectsPageProps) {
+  const totalWordCount = (projectId: string) =>
+    props.state.chapters
+      .filter((chapter) => chapter.projectId === projectId)
+      .reduce((total, chapter) => total + chapter.wordCount, 0)
+
+  const chapterCount = (projectId: string) =>
+    props.state.chapters.filter((chapter) => chapter.projectId === projectId).length
+
+  return (
+    <div className="app-surface">
+      <header className="projects-header">
+        <div>
+          <p className="eyebrow">Webnovel IDE</p>
+          <h1>作品</h1>
+        </div>
+        <button className="primary-button" onClick={props.onCreateProject}>
+          新建作品
+        </button>
+      </header>
+
+      {props.state.projects.length === 0 ? (
+        <section className="empty-state">
+          <h2>创建第一本作品</h2>
+          <p>先建立作品工程，再逐步添加章节、人物、设定和 AI 辅助流程。</p>
+          <button className="primary-button" onClick={props.onCreateProject}>
+            新建作品
+          </button>
+        </section>
+      ) : (
+        <section className="project-grid">
+          {props.state.projects.map((project) => (
+            <article className="project-card" key={project.id}>
+              <div>
+                <h2>{project.title}</h2>
+                <p>{project.synopsis || '暂无简介'}</p>
+              </div>
+              <dl>
+                <div>
+                  <dt>题材</dt>
+                  <dd>{project.genre || '未填写'}</dd>
+                </div>
+                <div>
+                  <dt>平台</dt>
+                  <dd>{project.targetPlatform || '未填写'}</dd>
+                </div>
+                <div>
+                  <dt>章节</dt>
+                  <dd>{chapterCount(project.id)}</dd>
+                </div>
+                <div>
+                  <dt>字数</dt>
+                  <dd>{totalWordCount(project.id)}</dd>
+                </div>
+              </dl>
+              <div className="card-footer">
+                <span>更新于 {formatDateTime(project.updatedAt)}</span>
+                <button onClick={() => props.onOpenProject(project.id)}>进入工作台</button>
+              </div>
+            </article>
+          ))}
+        </section>
+      )}
+
+      {props.createProjectOpen && (
+        <CreateProjectDialog
+          onClose={props.onCloseCreateProject}
+          onSubmit={props.onSubmitProject}
+        />
+      )}
+    </div>
+  )
+}
+
+function CreateProjectDialog(props: {
+  onClose: () => void
+  onSubmit: (form: Pick<Project, 'title' | 'genre' | 'synopsis' | 'targetPlatform'>) => void
+}) {
+  const [title, setTitle] = useState('')
+  const [genre, setGenre] = useState('')
+  const [targetPlatform, setTargetPlatform] = useState('')
+  const [synopsis, setSynopsis] = useState('')
+
+  return (
+    <div className="dialog-backdrop">
+      <form
+        className="dialog"
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (!title.trim()) return
+          props.onSubmit({
+            title: title.trim(),
+            genre: genre.trim(),
+            synopsis: synopsis.trim(),
+            targetPlatform: targetPlatform.trim(),
+          })
+        }}
+      >
+        <header>
+          <h2>新建作品</h2>
+          <button type="button" className="ghost-button" onClick={props.onClose}>
+            关闭
+          </button>
+        </header>
+        <label>
+          作品名
+          <input value={title} onChange={(event) => setTitle(event.target.value)} autoFocus />
+        </label>
+        <label>
+          题材/类型
+          <input value={genre} onChange={(event) => setGenre(event.target.value)} />
+        </label>
+        <label>
+          目标平台
+          <input value={targetPlatform} onChange={(event) => setTargetPlatform(event.target.value)} />
+        </label>
+        <label>
+          简介
+          <textarea value={synopsis} onChange={(event) => setSynopsis(event.target.value)} />
+        </label>
+        <footer>
+          <button type="button" onClick={props.onClose}>
+            取消
+          </button>
+          <button type="submit" className="primary-button" disabled={!title.trim()}>
+            创建并进入
+          </button>
+        </footer>
+      </form>
+    </div>
+  )
+}
+
+interface WorkspacePageProps {
+  state: WebnovelIDEState
+  project: Project
+  chapter?: Chapter
+  mainView: MainView
+  selectedCharacterId?: string
+  selectedSettingId?: string
+  onBack: () => void
+  onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
+  onSelectChapter: (chapterId: string) => void
+  onSelectCharacter: (characterId: string) => void
+  onSelectSetting: (settingId: string) => void
+  onSetMainView: (view: MainView) => void
+}
+
+function WorkspacePage(props: WorkspacePageProps) {
+  const projectVolumes = props.state.volumes
+    .filter((volume) => volume.projectId === props.project.id)
+    .sort((a, b) => a.order - b.order)
+  const projectChapters = props.state.chapters
+    .filter((chapter) => chapter.projectId === props.project.id)
+    .sort((a, b) => a.order - b.order)
+  const projectCharacters = props.state.characters.filter(
+    (character) => character.projectId === props.project.id,
+  )
+  const projectSettings = props.state.settings.filter((setting) => setting.projectId === props.project.id)
+  const selectedCharacter = projectCharacters.find(
+    (character) => character.id === props.selectedCharacterId,
+  )
+  const selectedSetting = projectSettings.find((setting) => setting.id === props.selectedSettingId)
+
+  function createVolume() {
+    const title = window.prompt('卷名', `第 ${projectVolumes.length + 1} 卷`)
+    if (!title) return
+    const timestamp = nowIso()
+
+    props.onPatchState((current) => ({
+      ...current,
+      volumes: [
+        ...current.volumes,
+        {
+          id: createId('volume'),
+          projectId: props.project.id,
+          title,
+          summary: '',
+          order: projectVolumes.length + 1,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        },
+      ],
+    }))
+  }
+
+  function createChapter(volume: Volume) {
+    const timestamp = nowIso()
+    const chapterId = createId('chapter')
+    const chaptersInVolume = projectChapters.filter((chapter) => chapter.volumeId === volume.id)
+
+    props.onPatchState((current) => ({
+      ...current,
+      chapters: [
+        ...current.chapters,
+        {
+          id: chapterId,
+          projectId: props.project.id,
+          volumeId: volume.id,
+          title: `第 ${projectChapters.length + 1} 章`,
+          goal: '',
+          summary: '',
+          content: '',
+          status: 'draft',
+          wordCount: 0,
+          order: chaptersInVolume.length + 1,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        },
+      ],
+      activeChapterId: chapterId,
+    }))
+    props.onSetMainView('chapter')
+  }
+
+  function createCharacter() {
+    const timestamp = nowIso()
+    const id = createId('character')
+
+    props.onPatchState((current) => ({
+      ...current,
+      characters: [
+        ...current.characters,
+        {
+          id,
+          projectId: props.project.id,
+          name: '新人物',
+          role: '',
+          faction: '',
+          personality: '',
+          desire: '',
+          abilities: '',
+          speechStyle: '',
+          currentState: '',
+          notes: '',
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        },
+      ],
+    }))
+    props.onSelectCharacter(id)
+  }
+
+  function createSetting() {
+    const timestamp = nowIso()
+    const id = createId('setting')
+
+    props.onPatchState((current) => ({
+      ...current,
+      settings: [
+        ...current.settings,
+        {
+          id,
+          projectId: props.project.id,
+          title: '新设定',
+          category: 'world',
+          content: '',
+          importance: 'medium',
+          notes: '',
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        },
+      ],
+    }))
+    props.onSelectSetting(id)
+  }
+
+  return (
+    <div className="workspace">
+      <header className="workspace-topbar">
+        <button className="ghost-button" onClick={props.onBack}>
+          返回
+        </button>
+        <div>
+          <strong>{props.project.title}</strong>
+          <span>{props.chapter ? props.chapter.title : '未选择章节'}</span>
+        </div>
+        <div className="topbar-meta">
+          <span>已保存</span>
+          <span>{props.chapter?.wordCount ?? 0} 字</span>
+        </div>
+      </header>
+
+      <aside className="project-sidebar">
+        <section>
+          <div className="sidebar-heading">
+            <h2>章节</h2>
+            <button onClick={createVolume}>+ 卷</button>
+          </div>
+          {projectVolumes.map((volume) => (
+            <div className="volume-block" key={volume.id}>
+              <div className="volume-title">
+                <span>{volume.title}</span>
+                <button onClick={() => createChapter(volume)}>+ 章</button>
+              </div>
+              {projectChapters
+                .filter((chapter) => chapter.volumeId === volume.id)
+                .map((chapter) => (
+                  <button
+                    className={`chapter-link ${chapter.id === props.chapter?.id ? 'active' : ''}`}
+                    key={chapter.id}
+                    onClick={() => props.onSelectChapter(chapter.id)}
+                  >
+                    <span>{chapter.title}</span>
+                    <small>{chapterStatusLabels[chapter.status]}</small>
+                  </button>
+                ))}
+            </div>
+          ))}
+        </section>
+
+        <section>
+          <div className="sidebar-heading">
+            <h2>人物</h2>
+            <button onClick={createCharacter}>+</button>
+          </div>
+          {projectCharacters.map((character) => (
+            <button
+              className={`plain-list-item ${character.id === selectedCharacter?.id ? 'active' : ''}`}
+              key={character.id}
+              onClick={() => props.onSelectCharacter(character.id)}
+            >
+              {character.name}
+            </button>
+          ))}
+        </section>
+
+        <section>
+          <div className="sidebar-heading">
+            <h2>设定</h2>
+            <button onClick={createSetting}>+</button>
+          </div>
+          {projectSettings.map((setting) => (
+            <button
+              className={`plain-list-item ${setting.id === selectedSetting?.id ? 'active' : ''}`}
+              key={setting.id}
+              onClick={() => props.onSelectSetting(setting.id)}
+            >
+              {setting.title}
+            </button>
+          ))}
+        </section>
+      </aside>
+
+      <main className="main-panel">
+        {props.mainView === 'chapter' && props.chapter && (
+          <ChapterEditor chapter={props.chapter} onPatchState={props.onPatchState} />
+        )}
+        {props.mainView === 'character' && selectedCharacter && (
+          <CharacterEditor character={selectedCharacter} onPatchState={props.onPatchState} />
+        )}
+        {props.mainView === 'setting' && selectedSetting && (
+          <SettingEditor setting={selectedSetting} onPatchState={props.onPatchState} />
+        )}
+      </main>
+
+      <ContextPanel
+        state={props.state}
+        project={props.project}
+        chapter={props.chapter}
+        characters={projectCharacters}
+        settings={projectSettings}
+        onPatchState={props.onPatchState}
+      />
+    </div>
+  )
+}
+
+function ChapterEditor(props: {
+  chapter: Chapter
+  onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
+}) {
+  function updateChapter(patch: Partial<Chapter>) {
+    const timestamp = nowIso()
+
+    props.onPatchState((current) => ({
+      ...current,
+      chapters: current.chapters.map((chapter) =>
+        chapter.id === props.chapter.id
+          ? {
+              ...chapter,
+              ...patch,
+              wordCount:
+                typeof patch.content === 'string' ? countWords(patch.content) : chapter.wordCount,
+              updatedAt: timestamp,
+            }
+          : chapter,
+      ),
+    }))
+  }
+
+  return (
+    <section className="editor-panel">
+      <input
+        className="chapter-title-input"
+        value={props.chapter.title}
+        onChange={(event) => updateChapter({ title: event.target.value })}
+      />
+      <div className="editor-toolbar">
+        <select
+          value={props.chapter.status}
+          onChange={(event) => updateChapter({ status: event.target.value as ChapterStatus })}
+        >
+          {Object.entries(chapterStatusLabels).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <button type="button" onClick={() => updateChapter({ summary: summarizeChapter(props.chapter) })}>
+          总结本章
+        </button>
+        <span>{props.chapter.wordCount} 字</span>
+      </div>
+      <label className="field-block">
+        本章目标
+        <textarea
+          value={props.chapter.goal ?? ''}
+          onChange={(event) => updateChapter({ goal: event.target.value })}
+        />
+      </label>
+      <textarea
+        className="chapter-content"
+        value={props.chapter.content}
+        onChange={(event) => updateChapter({ content: event.target.value })}
+        placeholder="开始写这一章..."
+      />
+    </section>
+  )
+}
+
+function CharacterEditor(props: {
+  character: Character
+  onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
+}) {
+  function updateCharacter(patch: Partial<Character>) {
+    props.onPatchState((current) => ({
+      ...current,
+      characters: current.characters.map((character) =>
+        character.id === props.character.id
+          ? { ...character, ...patch, updatedAt: nowIso() }
+          : character,
+      ),
+    }))
+  }
+
+  return (
+    <FormPanel title="人物卡">
+      <TextField label="姓名" value={props.character.name} onChange={(name) => updateCharacter({ name })} />
+      <TextField label="身份" value={props.character.role ?? ''} onChange={(role) => updateCharacter({ role })} />
+      <TextField
+        label="阵营/势力"
+        value={props.character.faction ?? ''}
+        onChange={(faction) => updateCharacter({ faction })}
+      />
+      <TextAreaField
+        label="性格关键词"
+        value={props.character.personality ?? ''}
+        onChange={(personality) => updateCharacter({ personality })}
+      />
+      <TextAreaField
+        label="目标/欲望"
+        value={props.character.desire ?? ''}
+        onChange={(desire) => updateCharacter({ desire })}
+      />
+      <TextAreaField
+        label="口吻特点"
+        value={props.character.speechStyle ?? ''}
+        onChange={(speechStyle) => updateCharacter({ speechStyle })}
+      />
+      <TextAreaField
+        label="当前状态"
+        value={props.character.currentState ?? ''}
+        onChange={(currentState) => updateCharacter({ currentState })}
+      />
+    </FormPanel>
+  )
+}
+
+function SettingEditor(props: {
+  setting: Setting
+  onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
+}) {
+  function updateSetting(patch: Partial<Setting>) {
+    props.onPatchState((current) => ({
+      ...current,
+      settings: current.settings.map((setting) =>
+        setting.id === props.setting.id ? { ...setting, ...patch, updatedAt: nowIso() } : setting,
+      ),
+    }))
+  }
+
+  return (
+    <FormPanel title="设定卡">
+      <TextField label="标题" value={props.setting.title} onChange={(title) => updateSetting({ title })} />
+      <label className="field-block">
+        分类
+        <select
+          value={props.setting.category}
+          onChange={(event) => updateSetting({ category: event.target.value as SettingCategory })}
+        >
+          {Object.entries(settingCategoryLabels).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="field-block">
+        重要程度
+        <select
+          value={props.setting.importance}
+          onChange={(event) => updateSetting({ importance: event.target.value as SettingImportance })}
+        >
+          {Object.entries(settingImportanceLabels).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <TextAreaField
+        label="内容"
+        value={props.setting.content}
+        onChange={(content) => updateSetting({ content })}
+      />
+      <TextAreaField
+        label="备注"
+        value={props.setting.notes ?? ''}
+        onChange={(notes) => updateSetting({ notes })}
+      />
+    </FormPanel>
+  )
+}
+
+function ContextPanel(props: {
+  state: WebnovelIDEState
+  project: Project
+  chapter?: Chapter
+  characters: Character[]
+  settings: Setting[]
+  onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
+}) {
+  const [taskType, setTaskType] = useState<AITaskType>('continue')
+  const [instruction, setInstruction] = useState('')
+  const [result, setResult] = useState('')
+
+  const relatedCharacters = useMemo(() => {
+    if (!props.chapter) return []
+    const ids = props.state.chapterCharacters
+      .filter((item) => item.chapterId === props.chapter?.id)
+      .map((item) => item.characterId)
+    return props.characters.filter((character) => ids.includes(character.id))
+  }, [props.chapter, props.characters, props.state.chapterCharacters])
+
+  const relatedSettings = useMemo(() => {
+    if (!props.chapter) return []
+    const ids = props.state.chapterSettings
+      .filter((item) => item.chapterId === props.chapter?.id)
+      .map((item) => item.settingId)
+    return props.settings.filter((setting) => ids.includes(setting.id))
+  }, [props.chapter, props.settings, props.state.chapterSettings])
+
+  function generateMockAI() {
+    if (!props.chapter) return
+    const output = buildMockAIResult(taskType, props.chapter, instruction)
+    const timestamp = nowIso()
+
+    props.onPatchState((current) => ({
+      ...current,
+      aiRequests: [
+        ...current.aiRequests,
+        {
+          id: createId('ai'),
+          userId: 'user_local',
+          projectId: props.project.id,
+          chapterId: props.chapter?.id,
+          taskType,
+          instruction,
+          inputSnapshot: JSON.stringify({
+            project: props.project.title,
+            chapter: props.chapter?.title,
+            relatedCharacters: relatedCharacters.map((character) => character.name),
+            relatedSettings: relatedSettings.map((setting) => setting.title),
+          }),
+          output,
+          provider: 'mock',
+          model: 'local-prototype',
+          status: 'succeeded',
+          createdAt: timestamp,
+          completedAt: timestamp,
+        },
+      ],
+    }))
+    setResult(output)
+  }
+
+  function insertResult() {
+    if (!props.chapter || !result) return
+    const nextContent = `${props.chapter.content}${props.chapter.content ? '\n\n' : ''}${result}`
+
+    props.onPatchState((current) => ({
+      ...current,
+      chapters: current.chapters.map((chapter) =>
+        chapter.id === props.chapter?.id
+          ? { ...chapter, content: nextContent, wordCount: countWords(nextContent), updatedAt: nowIso() }
+          : chapter,
+      ),
+    }))
+  }
+
+  return (
+    <aside className="context-panel">
+      <section>
+        <h2>当前章节</h2>
+        {props.chapter ? (
+          <div className="context-card">
+            <strong>{props.chapter.title}</strong>
+            <span>{chapterStatusLabels[props.chapter.status]}</span>
+            <p>{props.chapter.goal || '暂无本章目标'}</p>
+            <small>{props.chapter.summary || '暂无本章摘要'}</small>
+          </div>
+        ) : (
+          <p className="muted">未选择章节</p>
+        )}
+      </section>
+
+      <section>
+        <h2>相关人物</h2>
+        <RelationPicker
+          items={props.characters}
+          activeIds={relatedCharacters.map((character) => character.id)}
+          getLabel={(character) => character.name}
+          onToggle={(characterId) => {
+            if (!props.chapter) return
+            props.onPatchState((current) => toggleChapterCharacter(current, props.chapter!.id, characterId))
+          }}
+        />
+      </section>
+
+      <section>
+        <h2>相关设定</h2>
+        <RelationPicker
+          items={props.settings}
+          activeIds={relatedSettings.map((setting) => setting.id)}
+          getLabel={(setting) => setting.title}
+          onToggle={(settingId) => {
+            if (!props.chapter) return
+            props.onPatchState((current) => toggleChapterSetting(current, props.chapter!.id, settingId))
+          }}
+        />
+      </section>
+
+      <section className="ai-panel">
+        <h2>AI 助手</h2>
+        <select value={taskType} onChange={(event) => setTaskType(event.target.value as AITaskType)}>
+          {Object.entries(aiTaskLabels).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <textarea
+          value={instruction}
+          onChange={(event) => setInstruction(event.target.value)}
+          placeholder="补充你的指令..."
+        />
+        <button className="primary-button" onClick={generateMockAI} disabled={!props.chapter}>
+          生成模拟结果
+        </button>
+        <div className="ai-result">{result || 'AI 输出会显示在这里。'}</div>
+        <button onClick={insertResult} disabled={!result}>
+          插入正文
+        </button>
+      </section>
+    </aside>
+  )
+}
+
+function RelationPicker<T extends { id: string }>(props: {
+  items: T[]
+  activeIds: string[]
+  getLabel: (item: T) => string
+  onToggle: (id: string) => void
+}) {
+  if (props.items.length === 0) {
+    return <p className="muted">暂无可关联内容</p>
+  }
+
+  return (
+    <div className="relation-list">
+      {props.items.map((item) => (
+        <button
+          className={props.activeIds.includes(item.id) ? 'active' : ''}
+          key={item.id}
+          onClick={() => props.onToggle(item.id)}
+        >
+          {props.getLabel(item)}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function FormPanel(props: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="form-panel">
+      <h1>{props.title}</h1>
+      {props.children}
+    </section>
+  )
+}
+
+function TextField(props: { label: string; value: string; onChange: (value: string) => void }) {
+  return (
+    <label className="field-block">
+      {props.label}
+      <input value={props.value} onChange={(event) => props.onChange(event.target.value)} />
+    </label>
+  )
+}
+
+function TextAreaField(props: { label: string; value: string; onChange: (value: string) => void }) {
+  return (
+    <label className="field-block">
+      {props.label}
+      <textarea value={props.value} onChange={(event) => props.onChange(event.target.value)} />
+    </label>
+  )
+}
+
+function toggleChapterCharacter(
+  state: WebnovelIDEState,
+  chapterId: string,
+  characterId: string,
+): WebnovelIDEState {
+  const exists = state.chapterCharacters.some(
+    (item) => item.chapterId === chapterId && item.characterId === characterId,
+  )
+
+  return {
+    ...state,
+    chapterCharacters: exists
+      ? state.chapterCharacters.filter(
+          (item) => !(item.chapterId === chapterId && item.characterId === characterId),
+        )
+      : [...state.chapterCharacters, { chapterId, characterId, createdAt: nowIso() }],
+  }
+}
+
+function toggleChapterSetting(
+  state: WebnovelIDEState,
+  chapterId: string,
+  settingId: string,
+): WebnovelIDEState {
+  const exists = state.chapterSettings.some(
+    (item) => item.chapterId === chapterId && item.settingId === settingId,
+  )
+
+  return {
+    ...state,
+    chapterSettings: exists
+      ? state.chapterSettings.filter((item) => !(item.chapterId === chapterId && item.settingId === settingId))
+      : [...state.chapterSettings, { chapterId, settingId, createdAt: nowIso() }],
+  }
+}
+
+function summarizeChapter(chapter: Chapter): string {
+  if (!chapter.content.trim()) {
+    return '本章尚未写入正文。'
+  }
+
+  const compact = chapter.content.replace(/\s+/g, ' ').trim()
+  return compact.length > 120 ? `${compact.slice(0, 120)}...` : compact
+}
+
+function buildMockAIResult(taskType: AITaskType, chapter: Chapter, instruction: string): string {
+  const base = instruction ? `根据指令「${instruction}」` : '根据当前章节上下文'
+
+  if (taskType === 'summarize') {
+    return summarizeChapter(chapter)
+  }
+
+  if (taskType === 'polish') {
+    return `${base}，这里给出一版更紧凑、更适合连载阅读的润色结果。`
+  }
+
+  if (taskType === 'rewrite') {
+    return `${base}，这里给出一版改写文本，保留原意并强化场景推进。`
+  }
+
+  return `${base}，下一段可以推进冲突、补足角色反应，并在段尾留下新的悬念。`
+}

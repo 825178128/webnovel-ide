@@ -29,6 +29,32 @@ Phase 0: 立项与需求分析。
 - [技术栈选型](D:/codex/webnovel-ide/docs/architecture/01-tech-stack.md)
 - [MVP 数据模型](D:/codex/webnovel-ide/docs/architecture/02-data-model.md)
 
+## Local Development
+
+安装依赖：
+
+```bash
+npm install
+```
+
+启动开发服务器：
+
+```bash
+npm run dev
+```
+
+如果默认端口被旧项目占用，可以指定端口：
+
+```bash
+npm run dev -- --host 127.0.0.1 --port 5180 --strictPort
+```
+
+构建验证：
+
+```bash
+npm run build
+```
+
 ## Planned Traceable Documents
 
 - `docs/product/01-requirements-analysis.md`: 需求分析与优先级
