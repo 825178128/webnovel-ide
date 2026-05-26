@@ -12,7 +12,7 @@ import type {
   WebnovelIDEState,
 } from './types'
 import { loadState, saveState, seedProjectDefaults } from './storage'
-import { countWords, createId, formatDateTime, nowIso } from './utils'
+import { countWords, createId, downloadText, formatDateTime, nowIso } from './utils'
 
 type MainView = 'chapter' | 'character' | 'setting'
 
@@ -427,6 +427,59 @@ function WorkspacePage(props: WorkspacePageProps) {
     props.onSelectSetting(id)
   }
 
+  function deleteChapter(chapterId: string) {
+    const chapter = projectChapters.find((item) => item.id === chapterId)
+    if (!chapter || !window.confirm(`确定删除章节「${chapter.title}」吗？`)) return
+
+    const remainingChapters = projectChapters.filter((item) => item.id !== chapterId)
+    const nextActiveChapter = remainingChapters[0]
+
+    props.onPatchState((current) => ({
+      ...current,
+      chapters: current.chapters.filter((item) => item.id !== chapterId),
+      chapterCharacters: current.chapterCharacters.filter((item) => item.chapterId !== chapterId),
+      chapterSettings: current.chapterSettings.filter((item) => item.chapterId !== chapterId),
+      aiRequests: current.aiRequests.filter((item) => item.chapterId !== chapterId),
+      activeChapterId: nextActiveChapter?.id,
+    }))
+    props.onSetMainView('chapter')
+  }
+
+  function deleteCharacter(characterId: string) {
+    const character = projectCharacters.find((item) => item.id === characterId)
+    if (!character || !window.confirm(`确定删除人物「${character.name}」吗？`)) return
+
+    props.onPatchState((current) => ({
+      ...current,
+      characters: current.characters.filter((item) => item.id !== characterId),
+      chapterCharacters: current.chapterCharacters.filter((item) => item.characterId !== characterId),
+    }))
+    props.onSetMainView('chapter')
+  }
+
+  function deleteSetting(settingId: string) {
+    const setting = projectSettings.find((item) => item.id === settingId)
+    if (!setting || !window.confirm(`确定删除设定「${setting.title}」吗？`)) return
+
+    props.onPatchState((current) => ({
+      ...current,
+      settings: current.settings.filter((item) => item.id !== settingId),
+      chapterSettings: current.chapterSettings.filter((item) => item.settingId !== settingId),
+    }))
+    props.onSetMainView('chapter')
+  }
+
+  function exportActiveChapter(format: 'txt' | 'md') {
+    if (!props.chapter) return
+    const content = buildChapterExport(props.chapter, format)
+    downloadText(`${props.project.title}-${props.chapter.title}.${format}`, content)
+  }
+
+  function exportBook(format: 'txt' | 'md') {
+    const content = buildBookExport(props.project, projectVolumes, projectChapters, format)
+    downloadText(`${props.project.title}.${format}`, content)
+  }
+
   return (
     <div className="workspace">
       <header className="workspace-topbar">
@@ -438,6 +491,14 @@ function WorkspacePage(props: WorkspacePageProps) {
           <span>{props.chapter ? props.chapter.title : '未选择章节'}</span>
         </div>
         <div className="topbar-meta">
+          <button disabled={!props.chapter} onClick={() => exportActiveChapter('txt')}>
+            本章 TXT
+          </button>
+          <button disabled={!props.chapter} onClick={() => exportActiveChapter('md')}>
+            本章 MD
+          </button>
+          <button onClick={() => exportBook('txt')}>全书 TXT</button>
+          <button onClick={() => exportBook('md')}>全书 MD</button>
           <span>已保存</span>
           <span>{props.chapter?.wordCount ?? 0} 字</span>
         </div>
@@ -506,13 +567,26 @@ function WorkspacePage(props: WorkspacePageProps) {
 
       <main className="main-panel">
         {props.mainView === 'chapter' && props.chapter && (
-          <ChapterEditor chapter={props.chapter} onPatchState={props.onPatchState} />
+          <ChapterEditor
+            chapter={props.chapter}
+            onDeleteChapter={deleteChapter}
+            onExportChapter={exportActiveChapter}
+            onPatchState={props.onPatchState}
+          />
         )}
         {props.mainView === 'character' && selectedCharacter && (
-          <CharacterEditor character={selectedCharacter} onPatchState={props.onPatchState} />
+          <CharacterEditor
+            character={selectedCharacter}
+            onDeleteCharacter={deleteCharacter}
+            onPatchState={props.onPatchState}
+          />
         )}
         {props.mainView === 'setting' && selectedSetting && (
-          <SettingEditor setting={selectedSetting} onPatchState={props.onPatchState} />
+          <SettingEditor
+            setting={selectedSetting}
+            onDeleteSetting={deleteSetting}
+            onPatchState={props.onPatchState}
+          />
         )}
       </main>
 
@@ -530,6 +604,8 @@ function WorkspacePage(props: WorkspacePageProps) {
 
 function ChapterEditor(props: {
   chapter: Chapter
+  onDeleteChapter: (chapterId: string) => void
+  onExportChapter: (format: 'txt' | 'md') => void
   onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
 }) {
   function updateChapter(patch: Partial<Chapter>) {
@@ -572,6 +648,15 @@ function ChapterEditor(props: {
         <button type="button" onClick={() => updateChapter({ summary: summarizeChapter(props.chapter) })}>
           总结本章
         </button>
+        <button type="button" onClick={() => props.onExportChapter('txt')}>
+          导出 TXT
+        </button>
+        <button type="button" onClick={() => props.onExportChapter('md')}>
+          导出 MD
+        </button>
+        <button type="button" className="danger-button" onClick={() => props.onDeleteChapter(props.chapter.id)}>
+          删除
+        </button>
         <span>{props.chapter.wordCount} 字</span>
       </div>
       <label className="field-block">
@@ -593,6 +678,7 @@ function ChapterEditor(props: {
 
 function CharacterEditor(props: {
   character: Character
+  onDeleteCharacter: (characterId: string) => void
   onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
 }) {
   function updateCharacter(patch: Partial<Character>) {
@@ -608,6 +694,11 @@ function CharacterEditor(props: {
 
   return (
     <FormPanel title="人物卡">
+      <div className="form-actions">
+        <button className="danger-button" onClick={() => props.onDeleteCharacter(props.character.id)}>
+          删除人物
+        </button>
+      </div>
       <TextField label="姓名" value={props.character.name} onChange={(name) => updateCharacter({ name })} />
       <TextField label="身份" value={props.character.role ?? ''} onChange={(role) => updateCharacter({ role })} />
       <TextField
@@ -641,6 +732,7 @@ function CharacterEditor(props: {
 
 function SettingEditor(props: {
   setting: Setting
+  onDeleteSetting: (settingId: string) => void
   onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
 }) {
   function updateSetting(patch: Partial<Setting>) {
@@ -654,6 +746,11 @@ function SettingEditor(props: {
 
   return (
     <FormPanel title="设定卡">
+      <div className="form-actions">
+        <button className="danger-button" onClick={() => props.onDeleteSetting(props.setting.id)}>
+          删除设定
+        </button>
+      </div>
       <TextField label="标题" value={props.setting.title} onChange={(title) => updateSetting({ title })} />
       <label className="field-block">
         分类
@@ -952,4 +1049,43 @@ function buildMockAIResult(taskType: AITaskType, chapter: Chapter, instruction: 
   }
 
   return `${base}，下一段可以推进冲突、补足角色反应，并在段尾留下新的悬念。`
+}
+
+function buildChapterExport(chapter: Chapter, format: 'txt' | 'md'): string {
+  if (format === 'md') {
+    return `# ${chapter.title}\n\n${chapter.content.trim()}\n`
+  }
+
+  return `${chapter.title}\n\n${chapter.content.trim()}\n`
+}
+
+function buildBookExport(
+  project: Project,
+  volumes: Volume[],
+  chapters: Chapter[],
+  format: 'txt' | 'md',
+): string {
+  const sections = volumes
+    .map((volume) => {
+      const volumeChapters = chapters
+        .filter((chapter) => chapter.volumeId === volume.id)
+        .sort((a, b) => a.order - b.order)
+
+      const chapterText = volumeChapters
+        .map((chapter) => buildChapterExport(chapter, format))
+        .join('\n\n')
+
+      if (format === 'md') {
+        return `# ${volume.title}\n\n${chapterText}`
+      }
+
+      return `${volume.title}\n\n${chapterText}`
+    })
+    .join('\n\n')
+
+  if (format === 'md') {
+    return `# ${project.title}\n\n${sections}\n`
+  }
+
+  return `${project.title}\n\n${sections}\n`
 }

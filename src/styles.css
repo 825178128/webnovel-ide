@@ -58,6 +58,12 @@ textarea {
   color: #ffffff;
 }
 
+.danger-button {
+  border-color: #f0b8b8;
+  background: #fff5f5;
+  color: #b42318;
+}
+
 .ghost-button {
   background: transparent;
 }
@@ -236,7 +242,13 @@ textarea {
   margin-left: auto;
   display: flex;
   flex-direction: row !important;
+  align-items: center;
   gap: 12px !important;
+}
+
+.topbar-meta button {
+  padding: 6px 9px;
+  font-size: 12px;
 }
 
 .project-sidebar,
@@ -346,10 +358,15 @@ textarea {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .editor-toolbar select {
   max-width: 140px;
+}
+
+.editor-toolbar button {
+  white-space: nowrap;
 }
 
 .editor-toolbar span {
@@ -376,6 +393,11 @@ textarea {
 .form-panel h1 {
   margin: 0;
   font-size: 22px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .context-card {
