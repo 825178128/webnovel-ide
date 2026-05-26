@@ -29,6 +29,7 @@ Chapter
 Character
 Setting
 AIRequest
+AIConfig
 ```
 
 关系概览：
@@ -44,6 +45,7 @@ Chapter n ── n Character
 Chapter n ── n Setting
 Project 1 ── n AIRequest
 Chapter 1 ── n AIRequest
+User 1 ── 1 AIConfig
 ```
 
 MVP 本地原型可使用字符串 ID 和本地存储。全栈版本迁移到 PostgreSQL + Prisma。
@@ -448,6 +450,34 @@ export interface AIRequest {
 
 ## 13. 本地原型数据容器
 
+## 13. AIConfig
+
+AIConfig 表示 MVP 本地原型中的 AI 配置。全栈版本应迁移到服务端安全存储或后端代理，不应长期把真实密钥保存在前端。
+
+### 字段
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| provider | string | 是 | 模型供应商 |
+| apiKey | string | 否 | API Key，本地原型临时保存 |
+| model | string | 是 | 模型名称 |
+| baseUrl | string | 否 | OpenAI 兼容接口地址 |
+| updatedAt | string | 否 | 更新时间 |
+
+### TypeScript 草案
+
+```ts
+export interface AIConfig {
+  provider: string
+  apiKey: string
+  model: string
+  baseUrl?: string
+  updatedAt?: string
+}
+```
+
+## 14. 本地原型数据容器
+
 第一版本地原型可以用一个聚合对象存储。
 
 ```ts
@@ -461,6 +491,7 @@ export interface WebnovelIDEState {
   chapterCharacters: ChapterCharacter[]
   chapterSettings: ChapterSetting[]
   aiRequests: AIRequest[]
+  aiConfig?: AIConfig
   activeProjectId?: string
   activeChapterId?: string
 }
@@ -472,7 +503,7 @@ export interface WebnovelIDEState {
 webnovel-ide:v1
 ```
 
-## 14. 字数统计规则
+## 15. 字数统计规则
 
 MVP 阶段采用简单中文网文字数统计：
 
@@ -488,7 +519,7 @@ export function countWords(content: string): number {
 }
 ```
 
-## 15. AI 上下文组装数据
+## 16. AI 上下文组装数据
 
 AI 调用时不直接读取全部作品，而是组装最小必要上下文。
 
@@ -511,7 +542,7 @@ MVP 任务上下文：
 | 总结 | 章节标题、章节目标、章节正文 |
 | 改写 | 选中文本、用户指令、章节目标 |
 
-## 16. 后续实体预留
+## 17. 后续实体预留
 
 P1/P2/P3 可逐步加入：
 
@@ -528,7 +559,7 @@ P1/P2/P3 可逐步加入：
 | Material | 素材库 |
 | ExportJob | 导出任务 |
 
-## 17. MVP 数据验收
+## 18. MVP 数据验收
 
 - [ ] 一个用户可以拥有多个作品。
 - [ ] 一个作品可以拥有多个卷。
@@ -538,10 +569,11 @@ P1/P2/P3 可逐步加入：
 - [ ] 一个章节可以关联多个人物。
 - [ ] 一个章节可以关联多个设定。
 - [ ] AI 请求可以记录任务类型、输入快照和输出。
+- [ ] AI 配置可以保存 Provider、Model、Base URL 和本地原型密钥。
 - [ ] 刷新页面后本地数据不丢失。
 - [ ] 后续能平滑迁移到 PostgreSQL + Prisma。
 
-## 18. 下一步
+## 19. 下一步
 
 下一步可以开始工程实现：
 

@@ -23,6 +23,13 @@ export function createInitialState(): WebnovelIDEState {
     chapterCharacters: [],
     chapterSettings: [],
     aiRequests: [],
+    aiConfig: {
+      provider: 'mock',
+      apiKey: '',
+      model: 'local-prototype',
+      baseUrl: '',
+      updatedAt: timestamp,
+    },
   }
 }
 

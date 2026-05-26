@@ -5,6 +5,7 @@ import type {
   ChapterStatus,
   Character,
   Project,
+  ProjectStatus,
   Setting,
   SettingCategory,
   SettingImportance,
@@ -46,6 +47,14 @@ const aiTaskLabels: Record<AITaskType, string> = {
   rewrite: '改写',
 }
 
+const projectStatusLabels: Record<ProjectStatus, string> = {
+  planning: '筹备中',
+  writing: '连载中',
+  paused: '暂停',
+  completed: '已完结',
+  archived: '归档',
+}
+
 export function App() {
   const [state, setState] = useState<WebnovelIDEState>(() => loadState())
   const [screen, setScreen] = useState<'projects' | 'workspace'>(
@@ -55,6 +64,7 @@ export function App() {
   const [selectedCharacterId, setSelectedCharacterId] = useState<string>()
   const [selectedSettingId, setSelectedSettingId] = useState<string>()
   const [createProjectOpen, setCreateProjectOpen] = useState(false)
+  const [aiSettingsOpen, setAISettingsOpen] = useState(false)
 
   useEffect(() => {
     saveState(state)
@@ -116,47 +126,65 @@ export function App() {
       <ProjectsPage
         state={state}
         onCreateProject={() => setCreateProjectOpen(true)}
+        onOpenAISettings={() => setAISettingsOpen(true)}
         onOpenProject={openProject}
+        onPatchState={patchState}
         createProjectOpen={createProjectOpen}
+        aiSettingsOpen={aiSettingsOpen}
         onCloseCreateProject={() => setCreateProjectOpen(false)}
+        onCloseAISettings={() => setAISettingsOpen(false)}
         onSubmitProject={createProject}
       />
     )
   }
 
   return (
-    <WorkspacePage
-      state={state}
-      project={activeProject}
-      chapter={activeChapter}
-      mainView={mainView}
-      selectedCharacterId={selectedCharacterId}
-      selectedSettingId={selectedSettingId}
-      onBack={() => setScreen('projects')}
-      onPatchState={patchState}
-      onSelectChapter={(chapterId) => {
-        patchState((current) => ({ ...current, activeChapterId: chapterId }))
-        setMainView('chapter')
-      }}
-      onSelectCharacter={(characterId) => {
-        setSelectedCharacterId(characterId)
-        setMainView('character')
-      }}
-      onSelectSetting={(settingId) => {
-        setSelectedSettingId(settingId)
-        setMainView('setting')
-      }}
-      onSetMainView={setMainView}
-    />
+    <>
+      <WorkspacePage
+        state={state}
+        project={activeProject}
+        chapter={activeChapter}
+        mainView={mainView}
+        selectedCharacterId={selectedCharacterId}
+        selectedSettingId={selectedSettingId}
+        onBack={() => setScreen('projects')}
+        onOpenAISettings={() => setAISettingsOpen(true)}
+        onPatchState={patchState}
+        onSelectChapter={(chapterId) => {
+          patchState((current) => ({ ...current, activeChapterId: chapterId }))
+          setMainView('chapter')
+        }}
+        onSelectCharacter={(characterId) => {
+          setSelectedCharacterId(characterId)
+          setMainView('character')
+        }}
+        onSelectSetting={(settingId) => {
+          setSelectedSettingId(settingId)
+          setMainView('setting')
+        }}
+        onSetMainView={setMainView}
+      />
+      {aiSettingsOpen && (
+        <AISettingsDialog
+          config={state.aiConfig}
+          onClose={() => setAISettingsOpen(false)}
+          onPatchState={patchState}
+        />
+      )}
+    </>
   )
 }
 
 interface ProjectsPageProps {
   state: WebnovelIDEState
   createProjectOpen: boolean
+  aiSettingsOpen: boolean
   onCreateProject: () => void
+  onOpenAISettings: () => void
   onCloseCreateProject: () => void
+  onCloseAISettings: () => void
   onOpenProject: (projectId: string) => void
+  onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
   onSubmitProject: (form: Pick<Project, 'title' | 'genre' | 'synopsis' | 'targetPlatform'>) => void
 }
 
@@ -176,9 +204,12 @@ function ProjectsPage(props: ProjectsPageProps) {
           <p className="eyebrow">Webnovel IDE</p>
           <h1>作品</h1>
         </div>
-        <button className="primary-button" onClick={props.onCreateProject}>
-          新建作品
-        </button>
+        <div className="header-actions">
+          <button onClick={props.onOpenAISettings}>AI 配置</button>
+          <button className="primary-button" onClick={props.onCreateProject}>
+            新建作品
+          </button>
+        </div>
       </header>
 
       {props.state.projects.length === 0 ? (
@@ -228,6 +259,13 @@ function ProjectsPage(props: ProjectsPageProps) {
         <CreateProjectDialog
           onClose={props.onCloseCreateProject}
           onSubmit={props.onSubmitProject}
+        />
+      )}
+      {props.aiSettingsOpen && (
+        <AISettingsDialog
+          config={props.state.aiConfig}
+          onClose={props.onCloseAISettings}
+          onPatchState={props.onPatchState}
         />
       )}
     </div>
@@ -293,6 +331,165 @@ function CreateProjectDialog(props: {
   )
 }
 
+function ProjectSettingsDialog(props: {
+  project: Project
+  onClose: () => void
+  onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
+}) {
+  const [title, setTitle] = useState(props.project.title)
+  const [genre, setGenre] = useState(props.project.genre ?? '')
+  const [targetPlatform, setTargetPlatform] = useState(props.project.targetPlatform ?? '')
+  const [targetWordCount, setTargetWordCount] = useState(String(props.project.targetWordCount ?? ''))
+  const [dailyWordTarget, setDailyWordTarget] = useState(String(props.project.dailyWordTarget ?? ''))
+  const [status, setStatus] = useState<ProjectStatus>(props.project.status)
+  const [synopsis, setSynopsis] = useState(props.project.synopsis ?? '')
+
+  function saveProject() {
+    if (!title.trim()) return
+
+    props.onPatchState((current) => ({
+      ...current,
+      projects: current.projects.map((project) =>
+        project.id === props.project.id
+          ? {
+              ...project,
+              title: title.trim(),
+              genre: genre.trim(),
+              targetPlatform: targetPlatform.trim(),
+              targetWordCount: parseOptionalNumber(targetWordCount),
+              dailyWordTarget: parseOptionalNumber(dailyWordTarget),
+              status,
+              synopsis: synopsis.trim(),
+              updatedAt: nowIso(),
+            }
+          : project,
+      ),
+    }))
+    props.onClose()
+  }
+
+  return (
+    <div className="dialog-backdrop">
+      <form
+        className="dialog"
+        onSubmit={(event) => {
+          event.preventDefault()
+          saveProject()
+        }}
+      >
+        <header>
+          <h2>作品设置</h2>
+          <button type="button" className="ghost-button" onClick={props.onClose}>
+            关闭
+          </button>
+        </header>
+        <TextField label="作品名" value={title} onChange={setTitle} />
+        <TextField label="题材/类型" value={genre} onChange={setGenre} />
+        <TextField label="目标平台" value={targetPlatform} onChange={setTargetPlatform} />
+        <div className="form-grid">
+          <TextField label="目标字数" value={targetWordCount} onChange={setTargetWordCount} />
+          <TextField label="日更目标" value={dailyWordTarget} onChange={setDailyWordTarget} />
+        </div>
+        <label className="field-block">
+          作品状态
+          <select value={status} onChange={(event) => setStatus(event.target.value as ProjectStatus)}>
+            {Object.entries(projectStatusLabels).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <TextAreaField label="简介" value={synopsis} onChange={setSynopsis} />
+        <footer>
+          <button type="button" onClick={props.onClose}>
+            取消
+          </button>
+          <button type="submit" className="primary-button" disabled={!title.trim()}>
+            保存设置
+          </button>
+        </footer>
+      </form>
+    </div>
+  )
+}
+
+function AISettingsDialog(props: {
+  config: WebnovelIDEState['aiConfig']
+  onClose: () => void
+  onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
+}) {
+  const [provider, setProvider] = useState(props.config?.provider ?? 'mock')
+  const [apiKey, setApiKey] = useState(props.config?.apiKey ?? '')
+  const [model, setModel] = useState(props.config?.model ?? 'local-prototype')
+  const [baseUrl, setBaseUrl] = useState(props.config?.baseUrl ?? '')
+  const [testResult, setTestResult] = useState('')
+
+  function saveConfig() {
+    props.onPatchState((current) => ({
+      ...current,
+      aiConfig: {
+        provider: provider.trim() || 'mock',
+        apiKey: apiKey.trim(),
+        model: model.trim() || 'local-prototype',
+        baseUrl: baseUrl.trim(),
+        updatedAt: nowIso(),
+      },
+    }))
+    props.onClose()
+  }
+
+  return (
+    <div className="dialog-backdrop">
+      <form
+        className="dialog"
+        onSubmit={(event) => {
+          event.preventDefault()
+          saveConfig()
+        }}
+      >
+        <header>
+          <h2>AI 配置</h2>
+          <button type="button" className="ghost-button" onClick={props.onClose}>
+            关闭
+          </button>
+        </header>
+        <label className="field-block">
+          Provider
+          <select value={provider} onChange={(event) => setProvider(event.target.value)}>
+            <option value="mock">模拟输出</option>
+            <option value="openai">OpenAI 兼容</option>
+            <option value="custom">自定义</option>
+          </select>
+        </label>
+        <TextField label="API Key" value={apiKey} onChange={setApiKey} />
+        <TextField label="Model" value={model} onChange={setModel} />
+        <TextField label="Base URL" value={baseUrl} onChange={setBaseUrl} />
+        <p className="settings-note">
+          当前为本地原型配置。后续全栈版本会改为服务端代理调用，避免密钥暴露在前端。
+        </p>
+        {testResult && <p className="settings-result">{testResult}</p>}
+        <footer>
+          <button
+            type="button"
+            onClick={() => {
+              setTestResult(provider === 'mock' ? '模拟输出可用。' : '配置已保存前仅做本地字段校验。')
+            }}
+          >
+            测试连接
+          </button>
+          <button type="button" onClick={props.onClose}>
+            取消
+          </button>
+          <button type="submit" className="primary-button">
+            保存配置
+          </button>
+        </footer>
+      </form>
+    </div>
+  )
+}
+
 interface WorkspacePageProps {
   state: WebnovelIDEState
   project: Project
@@ -301,6 +498,7 @@ interface WorkspacePageProps {
   selectedCharacterId?: string
   selectedSettingId?: string
   onBack: () => void
+  onOpenAISettings: () => void
   onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
   onSelectChapter: (chapterId: string) => void
   onSelectCharacter: (characterId: string) => void
@@ -323,6 +521,7 @@ function WorkspacePage(props: WorkspacePageProps) {
     (character) => character.id === props.selectedCharacterId,
   )
   const selectedSetting = projectSettings.find((setting) => setting.id === props.selectedSettingId)
+  const [projectSettingsOpen, setProjectSettingsOpen] = useState(false)
 
   function createVolume() {
     const title = window.prompt('卷名', `第 ${projectVolumes.length + 1} 卷`)
@@ -499,6 +698,8 @@ function WorkspacePage(props: WorkspacePageProps) {
           </button>
           <button onClick={() => exportBook('txt')}>全书 TXT</button>
           <button onClick={() => exportBook('md')}>全书 MD</button>
+          <button onClick={props.onOpenAISettings}>AI 配置</button>
+          <button onClick={() => setProjectSettingsOpen(true)}>作品设置</button>
           <span>已保存</span>
           <span>{props.chapter?.wordCount ?? 0} 字</span>
         </div>
@@ -598,6 +799,13 @@ function WorkspacePage(props: WorkspacePageProps) {
         settings={projectSettings}
         onPatchState={props.onPatchState}
       />
+      {projectSettingsOpen && (
+        <ProjectSettingsDialog
+          project={props.project}
+          onClose={() => setProjectSettingsOpen(false)}
+          onPatchState={props.onPatchState}
+        />
+      )}
     </div>
   )
 }
@@ -912,6 +1120,7 @@ function ContextPanel(props: {
 
       <section className="ai-panel">
         <h2>AI 助手</h2>
+        <p className="muted">当前模型：{props.state.aiConfig?.model ?? 'local-prototype'}</p>
         <select value={taskType} onChange={(event) => setTaskType(event.target.value as AITaskType)}>
           {Object.entries(aiTaskLabels).map(([value, label]) => (
             <option key={value} value={value}>
@@ -1088,4 +1297,12 @@ function buildBookExport(
   }
 
   return `${project.title}\n\n${sections}\n`
+}
+
+function parseOptionalNumber(value: string): number | undefined {
+  const trimmed = value.trim()
+  if (!trimmed) return undefined
+
+  const parsed = Number(trimmed)
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined
 }

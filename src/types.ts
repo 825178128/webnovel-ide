@@ -17,6 +17,14 @@ export type AITaskType = 'continue' | 'polish' | 'summarize' | 'rewrite'
 
 export type AIRequestStatus = 'pending' | 'running' | 'succeeded' | 'failed'
 
+export interface AIConfig {
+  provider: string
+  apiKey: string
+  model: string
+  baseUrl?: string
+  updatedAt?: string
+}
+
 export interface User {
   id: string
   name?: string
@@ -133,6 +141,7 @@ export interface WebnovelIDEState {
   chapterCharacters: ChapterCharacter[]
   chapterSettings: ChapterSetting[]
   aiRequests: AIRequest[]
+  aiConfig?: AIConfig
   activeProjectId?: string
   activeChapterId?: string
 }
