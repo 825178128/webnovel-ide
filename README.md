@@ -23,6 +23,7 @@ Phase 0: 立项与需求分析。
 当前已产出：
 
 - [需求分析与优先级](D:/codex/webnovel-ide/docs/product/01-requirements-analysis.md)
+- [MVP 范围与验收标准](D:/codex/webnovel-ide/docs/product/02-mvp-scope.md)
 - [技术栈选型](D:/codex/webnovel-ide/docs/architecture/01-tech-stack.md)
 
 ## Planned Traceable Documents
