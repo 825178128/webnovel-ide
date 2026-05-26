@@ -335,6 +335,26 @@ textarea {
   font-weight: 700;
 }
 
+.inline-actions,
+.chapter-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.inline-actions button,
+.chapter-row-actions button {
+  padding: 4px 6px;
+  white-space: nowrap;
+}
+
+.chapter-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px;
+}
+
 .chapter-link,
 .plain-list-item {
   display: flex;

@@ -17,6 +17,13 @@ import { countWords, createId, downloadText, formatDateTime, nowIso } from './ut
 
 type MainView = 'chapter' | 'character' | 'setting'
 
+type CreateDialogState =
+  | { type: 'volume' }
+  | { type: 'chapter'; volumeId: string }
+  | { type: 'character' }
+  | { type: 'setting' }
+  | undefined
+
 const chapterStatusLabels: Record<ChapterStatus, string> = {
   draft: '草稿',
   writing: '写作中',
@@ -490,6 +497,193 @@ function AISettingsDialog(props: {
   )
 }
 
+function CreateVolumeDialog(props: {
+  onClose: () => void
+  onSubmit: (form: Pick<Volume, 'title' | 'summary'>) => void
+}) {
+  const [title, setTitle] = useState('')
+  const [summary, setSummary] = useState('')
+
+  return (
+    <div className="dialog-backdrop">
+      <form
+        className="dialog"
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (!title.trim()) return
+          props.onSubmit({ title: title.trim(), summary: summary.trim() })
+        }}
+      >
+        <header>
+          <h2>新建卷</h2>
+          <button type="button" className="ghost-button" onClick={props.onClose}>
+            关闭
+          </button>
+        </header>
+        <TextField label="卷名" value={title} onChange={setTitle} />
+        <TextAreaField label="卷简介" value={summary} onChange={setSummary} />
+        <footer>
+          <button type="button" onClick={props.onClose}>
+            取消
+          </button>
+          <button type="submit" className="primary-button" disabled={!title.trim()}>
+            创建卷
+          </button>
+        </footer>
+      </form>
+    </div>
+  )
+}
+
+function CreateChapterDialog(props: {
+  defaultTitle: string
+  onClose: () => void
+  onSubmit: (form: Pick<Chapter, 'title' | 'goal'>) => void
+}) {
+  const [title, setTitle] = useState(props.defaultTitle)
+  const [goal, setGoal] = useState('')
+
+  return (
+    <div className="dialog-backdrop">
+      <form
+        className="dialog"
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (!title.trim()) return
+          props.onSubmit({ title: title.trim(), goal: goal.trim() })
+        }}
+      >
+        <header>
+          <h2>新建章节</h2>
+          <button type="button" className="ghost-button" onClick={props.onClose}>
+            关闭
+          </button>
+        </header>
+        <TextField label="章节标题" value={title} onChange={setTitle} />
+        <TextAreaField label="本章目标" value={goal} onChange={setGoal} />
+        <footer>
+          <button type="button" onClick={props.onClose}>
+            取消
+          </button>
+          <button type="submit" className="primary-button" disabled={!title.trim()}>
+            创建章节
+          </button>
+        </footer>
+      </form>
+    </div>
+  )
+}
+
+function CreateCharacterDialog(props: {
+  onClose: () => void
+  onSubmit: (form: Pick<Character, 'name' | 'role' | 'faction'>) => void
+}) {
+  const [name, setName] = useState('')
+  const [role, setRole] = useState('')
+  const [faction, setFaction] = useState('')
+
+  return (
+    <div className="dialog-backdrop">
+      <form
+        className="dialog"
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (!name.trim()) return
+          props.onSubmit({ name: name.trim(), role: role.trim(), faction: faction.trim() })
+        }}
+      >
+        <header>
+          <h2>新建人物</h2>
+          <button type="button" className="ghost-button" onClick={props.onClose}>
+            关闭
+          </button>
+        </header>
+        <TextField label="姓名" value={name} onChange={setName} />
+        <TextField label="身份" value={role} onChange={setRole} />
+        <TextField label="阵营/势力" value={faction} onChange={setFaction} />
+        <footer>
+          <button type="button" onClick={props.onClose}>
+            取消
+          </button>
+          <button type="submit" className="primary-button" disabled={!name.trim()}>
+            创建人物
+          </button>
+        </footer>
+      </form>
+    </div>
+  )
+}
+
+function CreateSettingDialog(props: {
+  onClose: () => void
+  onSubmit: (form: Pick<Setting, 'title' | 'category' | 'content' | 'importance'>) => void
+}) {
+  const [title, setTitle] = useState('')
+  const [category, setCategory] = useState<SettingCategory>('world')
+  const [importance, setImportance] = useState<SettingImportance>('medium')
+  const [content, setContent] = useState('')
+
+  return (
+    <div className="dialog-backdrop">
+      <form
+        className="dialog"
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (!title.trim()) return
+          props.onSubmit({
+            title: title.trim(),
+            category,
+            importance,
+            content: content.trim(),
+          })
+        }}
+      >
+        <header>
+          <h2>新建设定</h2>
+          <button type="button" className="ghost-button" onClick={props.onClose}>
+            关闭
+          </button>
+        </header>
+        <TextField label="标题" value={title} onChange={setTitle} />
+        <div className="form-grid">
+          <label className="field-block">
+            分类
+            <select value={category} onChange={(event) => setCategory(event.target.value as SettingCategory)}>
+              {Object.entries(settingCategoryLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field-block">
+            重要程度
+            <select
+              value={importance}
+              onChange={(event) => setImportance(event.target.value as SettingImportance)}
+            >
+              {Object.entries(settingImportanceLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <TextAreaField label="内容" value={content} onChange={setContent} />
+        <footer>
+          <button type="button" onClick={props.onClose}>
+            取消
+          </button>
+          <button type="submit" className="primary-button" disabled={!title.trim()}>
+            创建设定
+          </button>
+        </footer>
+      </form>
+    </div>
+  )
+}
+
 interface WorkspacePageProps {
   state: WebnovelIDEState
   project: Project
@@ -522,10 +716,9 @@ function WorkspacePage(props: WorkspacePageProps) {
   )
   const selectedSetting = projectSettings.find((setting) => setting.id === props.selectedSettingId)
   const [projectSettingsOpen, setProjectSettingsOpen] = useState(false)
+  const [createDialog, setCreateDialog] = useState<CreateDialogState>()
 
-  function createVolume() {
-    const title = window.prompt('卷名', `第 ${projectVolumes.length + 1} 卷`)
-    if (!title) return
+  function createVolume(form: Pick<Volume, 'title' | 'summary'>) {
     const timestamp = nowIso()
 
     props.onPatchState((current) => ({
@@ -535,17 +728,18 @@ function WorkspacePage(props: WorkspacePageProps) {
         {
           id: createId('volume'),
           projectId: props.project.id,
-          title,
-          summary: '',
+          title: form.title,
+          summary: form.summary,
           order: projectVolumes.length + 1,
           createdAt: timestamp,
           updatedAt: timestamp,
         },
       ],
     }))
+    setCreateDialog(undefined)
   }
 
-  function createChapter(volume: Volume) {
+  function createChapter(volume: Volume, form: Pick<Chapter, 'title' | 'goal'>) {
     const timestamp = nowIso()
     const chapterId = createId('chapter')
     const chaptersInVolume = projectChapters.filter((chapter) => chapter.volumeId === volume.id)
@@ -558,8 +752,8 @@ function WorkspacePage(props: WorkspacePageProps) {
           id: chapterId,
           projectId: props.project.id,
           volumeId: volume.id,
-          title: `第 ${projectChapters.length + 1} 章`,
-          goal: '',
+          title: form.title,
+          goal: form.goal,
           summary: '',
           content: '',
           status: 'draft',
@@ -572,9 +766,10 @@ function WorkspacePage(props: WorkspacePageProps) {
       activeChapterId: chapterId,
     }))
     props.onSetMainView('chapter')
+    setCreateDialog(undefined)
   }
 
-  function createCharacter() {
+  function createCharacter(form: Pick<Character, 'name' | 'role' | 'faction'>) {
     const timestamp = nowIso()
     const id = createId('character')
 
@@ -585,9 +780,9 @@ function WorkspacePage(props: WorkspacePageProps) {
         {
           id,
           projectId: props.project.id,
-          name: '新人物',
-          role: '',
-          faction: '',
+          name: form.name,
+          role: form.role,
+          faction: form.faction,
           personality: '',
           desire: '',
           abilities: '',
@@ -600,9 +795,10 @@ function WorkspacePage(props: WorkspacePageProps) {
       ],
     }))
     props.onSelectCharacter(id)
+    setCreateDialog(undefined)
   }
 
-  function createSetting() {
+  function createSetting(form: Pick<Setting, 'title' | 'category' | 'content' | 'importance'>) {
     const timestamp = nowIso()
     const id = createId('setting')
 
@@ -613,10 +809,10 @@ function WorkspacePage(props: WorkspacePageProps) {
         {
           id,
           projectId: props.project.id,
-          title: '新设定',
-          category: 'world',
-          content: '',
-          importance: 'medium',
+          title: form.title,
+          category: form.category,
+          content: form.content,
+          importance: form.importance,
           notes: '',
           createdAt: timestamp,
           updatedAt: timestamp,
@@ -624,6 +820,61 @@ function WorkspacePage(props: WorkspacePageProps) {
       ],
     }))
     props.onSelectSetting(id)
+    setCreateDialog(undefined)
+  }
+
+  function renameVolume(volume: Volume) {
+    const title = window.prompt('卷名', volume.title)
+    if (!title?.trim()) return
+
+    props.onPatchState((current) => ({
+      ...current,
+      volumes: current.volumes.map((item) =>
+        item.id === volume.id ? { ...item, title: title.trim(), updatedAt: nowIso() } : item,
+      ),
+    }))
+  }
+
+  function deleteVolume(volumeId: string) {
+    const volume = projectVolumes.find((item) => item.id === volumeId)
+    if (!volume || !window.confirm(`确定删除卷「${volume.title}」及其全部章节吗？`)) return
+
+    const chapterIds = projectChapters
+      .filter((chapter) => chapter.volumeId === volumeId)
+      .map((chapter) => chapter.id)
+    const remainingChapter = projectChapters.find((chapter) => !chapterIds.includes(chapter.id))
+
+    props.onPatchState((current) => ({
+      ...current,
+      volumes: current.volumes.filter((item) => item.id !== volumeId),
+      chapters: current.chapters.filter((item) => !chapterIds.includes(item.id)),
+      chapterCharacters: current.chapterCharacters.filter((item) => !chapterIds.includes(item.chapterId)),
+      chapterSettings: current.chapterSettings.filter((item) => !chapterIds.includes(item.chapterId)),
+      aiRequests: current.aiRequests.filter((item) => !item.chapterId || !chapterIds.includes(item.chapterId)),
+      activeChapterId: remainingChapter?.id,
+    }))
+    props.onSetMainView('chapter')
+  }
+
+  function moveChapter(chapterId: string, direction: -1 | 1) {
+    const chapter = projectChapters.find((item) => item.id === chapterId)
+    if (!chapter) return
+
+    const siblings = projectChapters
+      .filter((item) => item.volumeId === chapter.volumeId)
+      .sort((a, b) => a.order - b.order)
+    const index = siblings.findIndex((item) => item.id === chapterId)
+    const swapWith = siblings[index + direction]
+    if (!swapWith) return
+
+    props.onPatchState((current) => ({
+      ...current,
+      chapters: current.chapters.map((item) => {
+        if (item.id === chapter.id) return { ...item, order: swapWith.order, updatedAt: nowIso() }
+        if (item.id === swapWith.id) return { ...item, order: chapter.order, updatedAt: nowIso() }
+        return item
+      }),
+    }))
   }
 
   function deleteChapter(chapterId: string) {
@@ -709,25 +960,38 @@ function WorkspacePage(props: WorkspacePageProps) {
         <section>
           <div className="sidebar-heading">
             <h2>章节</h2>
-            <button onClick={createVolume}>+ 卷</button>
+            <button onClick={() => setCreateDialog({ type: 'volume' })}>+ 卷</button>
           </div>
           {projectVolumes.map((volume) => (
             <div className="volume-block" key={volume.id}>
               <div className="volume-title">
                 <span>{volume.title}</span>
-                <button onClick={() => createChapter(volume)}>+ 章</button>
+                <div className="inline-actions">
+                  <button onClick={() => renameVolume(volume)}>改名</button>
+                  <button onClick={() => setCreateDialog({ type: 'chapter', volumeId: volume.id })}>
+                    + 章
+                  </button>
+                  <button className="danger-button" onClick={() => deleteVolume(volume.id)}>
+                    删
+                  </button>
+                </div>
               </div>
               {projectChapters
                 .filter((chapter) => chapter.volumeId === volume.id)
                 .map((chapter) => (
-                  <button
-                    className={`chapter-link ${chapter.id === props.chapter?.id ? 'active' : ''}`}
-                    key={chapter.id}
-                    onClick={() => props.onSelectChapter(chapter.id)}
-                  >
-                    <span>{chapter.title}</span>
-                    <small>{chapterStatusLabels[chapter.status]}</small>
-                  </button>
+                  <div className="chapter-row" key={chapter.id}>
+                    <button
+                      className={`chapter-link ${chapter.id === props.chapter?.id ? 'active' : ''}`}
+                      onClick={() => props.onSelectChapter(chapter.id)}
+                    >
+                      <span>{chapter.title}</span>
+                      <small>{chapterStatusLabels[chapter.status]}</small>
+                    </button>
+                    <div className="chapter-row-actions">
+                      <button onClick={() => moveChapter(chapter.id, -1)}>↑</button>
+                      <button onClick={() => moveChapter(chapter.id, 1)}>↓</button>
+                    </div>
+                  </div>
                 ))}
             </div>
           ))}
@@ -736,7 +1000,7 @@ function WorkspacePage(props: WorkspacePageProps) {
         <section>
           <div className="sidebar-heading">
             <h2>人物</h2>
-            <button onClick={createCharacter}>+</button>
+            <button onClick={() => setCreateDialog({ type: 'character' })}>+</button>
           </div>
           {projectCharacters.map((character) => (
             <button
@@ -752,7 +1016,7 @@ function WorkspacePage(props: WorkspacePageProps) {
         <section>
           <div className="sidebar-heading">
             <h2>设定</h2>
-            <button onClick={createSetting}>+</button>
+            <button onClick={() => setCreateDialog({ type: 'setting' })}>+</button>
           </div>
           {projectSettings.map((setting) => (
             <button
@@ -805,6 +1069,25 @@ function WorkspacePage(props: WorkspacePageProps) {
           onClose={() => setProjectSettingsOpen(false)}
           onPatchState={props.onPatchState}
         />
+      )}
+      {createDialog?.type === 'volume' && (
+        <CreateVolumeDialog onClose={() => setCreateDialog(undefined)} onSubmit={createVolume} />
+      )}
+      {createDialog?.type === 'chapter' && (
+        <CreateChapterDialog
+          defaultTitle={`第 ${projectChapters.length + 1} 章`}
+          onClose={() => setCreateDialog(undefined)}
+          onSubmit={(form) => {
+            const volume = projectVolumes.find((item) => item.id === createDialog.volumeId)
+            if (volume) createChapter(volume, form)
+          }}
+        />
+      )}
+      {createDialog?.type === 'character' && (
+        <CreateCharacterDialog onClose={() => setCreateDialog(undefined)} onSubmit={createCharacter} />
+      )}
+      {createDialog?.type === 'setting' && (
+        <CreateSettingDialog onClose={() => setCreateDialog(undefined)} onSubmit={createSetting} />
       )}
     </div>
   )
