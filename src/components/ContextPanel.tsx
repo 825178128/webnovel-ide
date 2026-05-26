@@ -124,8 +124,15 @@ export function ContextPanel(props: {
       </section>
 
       <section className="ai-panel">
-        <h2>AI 助手</h2>
-        <p className="muted">当前模型：{props.state.aiConfig?.model ?? 'local-prototype'}</p>
+        <div className="ai-panel-header">
+          <div>
+            <h2>AI 助手</h2>
+            <p className="muted">当前模型：{props.state.aiConfig?.model ?? 'local-prototype'}</p>
+          </div>
+          <span>Copilot</span>
+        </div>
+        <label className="field-block">
+          任务
         <select value={taskType} onChange={(event) => setTaskType(event.target.value as AITaskType)}>
           {Object.entries(aiTaskLabels).map(([value, label]) => (
             <option key={value} value={value}>
@@ -133,18 +140,27 @@ export function ContextPanel(props: {
             </option>
           ))}
         </select>
+        </label>
+        <label className="field-block">
+          指令
         <textarea
           value={instruction}
           onChange={(event) => setInstruction(event.target.value)}
           placeholder="补充你的指令..."
         />
+        </label>
         <button className="primary-button" onClick={generateMockAI} disabled={!props.chapter}>
           生成模拟结果
         </button>
-        <div className="ai-result">{result || 'AI 输出会显示在这里。'}</div>
-        <button onClick={insertResult} disabled={!result}>
-          插入正文
-        </button>
+        <div className="ai-output-block">
+          <div className="ai-output-title">
+            <span>输出</span>
+            <button onClick={insertResult} disabled={!result}>
+              插入正文
+            </button>
+          </div>
+          <div className="ai-result">{result || 'AI 输出会显示在这里。'}</div>
+        </div>
       </section>
     </aside>
   )

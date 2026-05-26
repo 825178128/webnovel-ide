@@ -320,6 +320,10 @@ textarea {
   background: var(--bg);
 }
 
+.workspace.assistant-collapsed {
+  grid-template-columns: 268px minmax(760px, 1fr);
+}
+
 .workspace-topbar {
   grid-column: 1 / -1;
   display: flex;
@@ -362,15 +366,48 @@ textarea {
   white-space: nowrap;
 }
 
-.topbar-meta button {
+.toolbar-group {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 6px !important;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 4px;
+}
+
+.topbar-meta button,
+.toolbar-group button {
   border-color: #dce2eb;
   background: #f8fafc;
   padding: 6px 9px;
   font-size: 12px;
 }
 
-.topbar-meta span {
-  padding-left: 2px;
+.toolbar-group button {
+  border-color: transparent;
+  background: transparent;
+}
+
+.toolbar-group button:hover:not(:disabled) {
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+}
+
+.save-status {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: baseline;
+  gap: 6px !important;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 7px 10px;
+}
+
+.save-status strong {
+  font-size: 12px;
 }
 
 .project-sidebar {
@@ -644,8 +681,27 @@ textarea {
   padding: 12px;
 }
 
-.ai-panel h2 {
-  color: var(--text);
+.ai-panel-header,
+.ai-output-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ai-panel-header h2,
+.ai-panel-header p {
+  margin: 0;
+}
+
+.ai-panel-header span {
+  border: 1px solid #cbd7f7;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: #1f4bb8;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 8px;
 }
 
 .ai-panel .primary-button {
@@ -665,6 +721,22 @@ textarea {
   line-height: 1.65;
   padding: 11px;
   white-space: pre-wrap;
+}
+
+.ai-output-block {
+  display: grid;
+  gap: 8px;
+}
+
+.ai-output-title span {
+  color: var(--muted-strong);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.ai-output-title button {
+  padding: 6px 8px;
+  font-size: 12px;
 }
 
 @media (max-width: 1180px) {

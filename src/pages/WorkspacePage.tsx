@@ -55,6 +55,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
   const selectedSetting = projectSettings.find((setting) => setting.id === props.selectedSettingId)
   const [projectSettingsOpen, setProjectSettingsOpen] = useState(false)
   const [createDialog, setCreateDialog] = useState<CreateDialogState>()
+  const [assistantCollapsed, setAssistantCollapsed] = useState(false)
 
   function createVolume(form: Pick<Volume, 'title' | 'summary'>) {
     const timestamp = nowIso()
@@ -269,7 +270,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
   }
 
   return (
-    <div className="workspace">
+    <div className={`workspace ${assistantCollapsed ? 'assistant-collapsed' : ''}`}>
       <header className="workspace-topbar">
         <button className="ghost-button" onClick={props.onBack}>
           返回
@@ -279,18 +280,27 @@ export function WorkspacePage(props: WorkspacePageProps) {
           <span>{props.chapter ? props.chapter.title : '未选择章节'}</span>
         </div>
         <div className="topbar-meta">
-          <button disabled={!props.chapter} onClick={() => exportActiveChapter('txt')}>
-            本章 TXT
-          </button>
-          <button disabled={!props.chapter} onClick={() => exportActiveChapter('md')}>
-            本章 MD
-          </button>
-          <button onClick={() => exportBook('txt')}>全书 TXT</button>
-          <button onClick={() => exportBook('md')}>全书 MD</button>
-          <button onClick={props.onOpenAISettings}>AI 配置</button>
-          <button onClick={() => setProjectSettingsOpen(true)}>作品设置</button>
-          <span>已保存</span>
-          <span>{props.chapter?.wordCount ?? 0} 字</span>
+          <div className="toolbar-group">
+            <button disabled={!props.chapter} onClick={() => exportActiveChapter('txt')}>
+              本章 TXT
+            </button>
+            <button disabled={!props.chapter} onClick={() => exportActiveChapter('md')}>
+              本章 MD
+            </button>
+            <button onClick={() => exportBook('txt')}>全书 TXT</button>
+            <button onClick={() => exportBook('md')}>全书 MD</button>
+          </div>
+          <div className="toolbar-group">
+            <button onClick={props.onOpenAISettings}>AI 配置</button>
+            <button onClick={() => setProjectSettingsOpen(true)}>作品设置</button>
+            <button onClick={() => setAssistantCollapsed((value) => !value)}>
+              {assistantCollapsed ? '展开助手' : '收起助手'}
+            </button>
+          </div>
+          <div className="save-status">
+            <span>已保存</span>
+            <strong>{props.chapter?.wordCount ?? 0} 字</strong>
+          </div>
         </div>
       </header>
 
@@ -393,14 +403,16 @@ export function WorkspacePage(props: WorkspacePageProps) {
         )}
       </main>
 
-      <ContextPanel
-        state={props.state}
-        project={props.project}
-        chapter={props.chapter}
-        characters={projectCharacters}
-        settings={projectSettings}
-        onPatchState={props.onPatchState}
-      />
+      {!assistantCollapsed && (
+        <ContextPanel
+          state={props.state}
+          project={props.project}
+          chapter={props.chapter}
+          characters={projectCharacters}
+          settings={projectSettings}
+          onPatchState={props.onPatchState}
+        />
+      )}
       {projectSettingsOpen && (
         <ProjectSettingsDialog
           project={props.project}
