@@ -345,11 +345,6 @@ export function WorkspacePage(props: WorkspacePageProps) {
               <span>{assistantCollapsed ? '打开助手' : '隐藏助手'}</span>
             </button>
           </div>
-          <div className="save-status">
-            <Icon name="save" />
-            <span>已保存</span>
-            <strong>{props.chapter?.wordCount ?? 0} 字</strong>
-          </div>
         </div>
       </header>
 
@@ -546,7 +541,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
         />
       )}
       <footer className="workspace-statusbar">
-        <span>{props.chapter?.status ? chapterStatusLabels[props.chapter.status] : '未选择章节'}</span>
+        <span>自动保存</span>
         <span>{props.chapter?.wordCount ?? 0} 字</span>
         <span>{projectChapters.length} 章</span>
         <span>{projectCharacters.length} 人物</span>

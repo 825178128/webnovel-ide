@@ -757,22 +757,6 @@ textarea {
   box-shadow: none;
 }
 
-.save-status {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: baseline;
-  gap: 6px !important;
-  border: 1px solid var(--chrome-border);
-  border-radius: var(--radius-md);
-  background: var(--chrome-bg-2);
-  padding: 7px 10px;
-}
-
-.save-status strong {
-  color: var(--text);
-  font-size: 12px;
-}
-
 .activity-bar {
   grid-row: 2 / 3;
   display: flex;
@@ -845,11 +829,54 @@ textarea {
   padding: 14px;
 }
 
+.context-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  border: 1px solid var(--chrome-border);
+  border-radius: var(--radius-md);
+  background: var(--chrome-bg-2);
+  padding: 4px;
+}
+
+.context-tabs button {
+  min-height: 34px;
+  justify-content: center;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted-strong);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 8px;
+}
+
+.context-tabs button:hover:not(:disabled) {
+  background: var(--sidebar-active);
+  color: var(--text);
+  box-shadow: none;
+}
+
+.context-tabs button.active {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+.context-panel-body {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
 .project-sidebar section,
 .context-panel section {
   display: grid;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .sidebar-heading,
