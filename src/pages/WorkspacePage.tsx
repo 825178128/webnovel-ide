@@ -292,17 +292,24 @@ export function WorkspacePage(props: WorkspacePageProps) {
   return (
     <div className={`workspace ${assistantCollapsed ? 'assistant-collapsed' : ''}`} onClick={() => setVolumeMenu(undefined)}>
       <header className="workspace-topbar">
-        <div className="window-controls" aria-hidden="true">
-          <span />
-          <span />
-          <span />
+        <div className="topbar-left">
+          <button className="topbar-back" aria-label="返回作品列表" title="返回作品列表" onClick={props.onBack}>
+            <Icon name="arrow-left" />
+          </button>
+          <div className="workspace-title">
+            <strong>{props.project.title}</strong>
+            <span>{props.project.genre || props.project.targetPlatform || '本地作品'}</span>
+          </div>
         </div>
-        <button className="topbar-back" aria-label="返回作品列表" title="返回作品列表" onClick={props.onBack}>
-          <Icon name="arrow-left" />
-        </button>
-        <div className="workspace-title">
-          <strong>{props.project.title}</strong>
-          <span>{props.chapter ? props.chapter.title : '未选择章节'}</span>
+        <div className="workspace-context">
+          <Icon name={props.mainView === 'chapter' ? 'file' : props.mainView === 'character' ? 'users' : 'database'} />
+          <span>
+            {props.mainView === 'chapter'
+              ? props.chapter?.title || '未选择章节'
+              : props.mainView === 'character'
+                ? selectedCharacter?.name || '人物'
+                : selectedSetting?.title || '设定'}
+          </span>
         </div>
         <div className="topbar-meta">
           <div className="toolbar-group">

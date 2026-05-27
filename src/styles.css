@@ -462,6 +462,10 @@ textarea {
   text-align: left;
 }
 
+.theme-option:hover:not(:disabled) {
+  transform: none;
+}
+
 .theme-option::before {
   content: "";
   display: block;
@@ -480,7 +484,8 @@ textarea {
   opacity: 0.72;
 }
 
-.theme-option-dark {
+.theme-option-dark,
+.theme-option-dark:hover:not(:disabled) {
   border-color: #33435c;
   background: #111a29;
   color: #e8eef7;
@@ -490,7 +495,8 @@ textarea {
   background: linear-gradient(90deg, #0d1420 0 18%, #192437 18% 44%, #172033 44% 100%);
 }
 
-.theme-option-light {
+.theme-option-light,
+.theme-option-light:hover:not(:disabled) {
   border-color: #d8dee8;
   background: #ffffff;
   color: #172033;
@@ -502,8 +508,20 @@ textarea {
 }
 
 .theme-option.active {
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(111, 150, 255, 0.18);
+  border-color: #5f86ff;
+  box-shadow: 0 0 0 3px rgba(95, 134, 255, 0.2);
+}
+
+.theme-option-dark.active,
+.theme-option-dark.active:hover:not(:disabled) {
+  background: #111a29;
+  color: #e8eef7;
+}
+
+.theme-option-light.active,
+.theme-option-light.active:hover:not(:disabled) {
+  background: #ffffff;
+  color: #172033;
 }
 
 .settings-result {
@@ -527,39 +545,24 @@ textarea {
   grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
   border-bottom: 1px solid #202b3b;
   border-bottom-color: var(--chrome-border);
   background: var(--chrome-bg);
   color: var(--text);
-  padding: 0 10px;
+  padding: 0 12px;
 }
 
-.window-controls {
-  display: flex !important;
-  flex-direction: row !important;
-  gap: 7px !important;
-  margin-right: 4px;
-}
-
-.window-controls span {
-  width: 11px;
-  height: 11px;
-  border-radius: 999px;
-  background: #ef5350;
-}
-
-.window-controls span:nth-child(2) {
-  background: #ffca28;
-}
-
-.window-controls span:nth-child(3) {
-  background: #66bb6a;
+.topbar-left {
+  display: flex;
+  min-width: 250px;
+  align-items: center;
+  gap: 10px;
 }
 
 .topbar-back {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-color: transparent;
   background: transparent;
   color: var(--muted);
@@ -573,7 +576,7 @@ textarea {
 
 .workspace-title {
   display: flex;
-  min-width: 180px;
+  min-width: 0;
   flex-direction: column;
   gap: 2px;
 }
@@ -586,6 +589,27 @@ textarea {
 .workspace-topbar span {
   color: var(--muted);
   font-size: 11px;
+}
+
+.workspace-context {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--muted-strong);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.workspace-context span {
+  overflow: hidden;
+  max-width: min(520px, 42vw);
+  color: var(--text);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .topbar-meta {
