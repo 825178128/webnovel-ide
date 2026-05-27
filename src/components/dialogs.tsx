@@ -5,6 +5,7 @@ import type {
   Character,
   Project,
   ProjectStatus,
+  AppTheme,
   Setting,
   SettingCategory,
   SettingImportance,
@@ -195,6 +196,128 @@ export function AISettingsDialog(props: {
           </button>
           <button type="submit" className="primary-button">
             保存配置
+          </button>
+        </footer>
+      </form>
+    </DialogShell>
+  )
+}
+
+export function AppSettingsDialog(props: {
+  state: WebnovelIDEState
+  onClose: () => void
+  onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
+}) {
+  const [activeTab, setActiveTab] = useState<'appearance' | 'ai'>('appearance')
+  const [theme, setTheme] = useState<AppTheme>(props.state.appSettings?.theme ?? 'dark')
+  const [provider, setProvider] = useState(props.state.aiConfig?.provider ?? 'mock')
+  const [apiKey, setApiKey] = useState(props.state.aiConfig?.apiKey ?? '')
+  const [model, setModel] = useState(props.state.aiConfig?.model ?? 'local-prototype')
+  const [baseUrl, setBaseUrl] = useState(props.state.aiConfig?.baseUrl ?? '')
+  const [testResult, setTestResult] = useState('')
+
+  function saveSettings() {
+    props.onPatchState((current) => ({
+      ...current,
+      appSettings: {
+        theme,
+        updatedAt: nowIso(),
+      },
+      aiConfig: {
+        provider: provider.trim() || 'mock',
+        apiKey: apiKey.trim(),
+        model: model.trim() || 'local-prototype',
+        baseUrl: baseUrl.trim(),
+        updatedAt: nowIso(),
+      },
+    }))
+    props.onClose()
+  }
+
+  return (
+    <DialogShell title="应用设置" onClose={props.onClose}>
+      <form
+        className="dialog-body app-settings-dialog"
+        onSubmit={(event) => {
+          event.preventDefault()
+          saveSettings()
+        }}
+      >
+        <div className="settings-tabs" role="tablist" aria-label="应用设置分类">
+          <button
+            type="button"
+            className={activeTab === 'appearance' ? 'active' : ''}
+            onClick={() => setActiveTab('appearance')}
+          >
+            外观
+          </button>
+          <button
+            type="button"
+            className={activeTab === 'ai' ? 'active' : ''}
+            onClick={() => setActiveTab('ai')}
+          >
+            AI
+          </button>
+        </div>
+
+        {activeTab === 'appearance' && (
+          <section className="settings-section">
+            <div className="theme-options">
+              <button
+                type="button"
+                className={`theme-option theme-option-dark ${theme === 'dark' ? 'active' : ''}`}
+                onClick={() => setTheme('dark')}
+              >
+                <span>专业深色</span>
+                <small>适合长时间写作和 IDE 工作台</small>
+              </button>
+              <button
+                type="button"
+                className={`theme-option theme-option-light ${theme === 'light' ? 'active' : ''}`}
+                onClick={() => setTheme('light')}
+              >
+                <span>清爽浅色</span>
+                <small>适合白天阅读、整理设定和审稿</small>
+              </button>
+            </div>
+            <p className="settings-note">主题会作用到项目列表、工作台、侧栏、编辑器和弹窗。</p>
+          </section>
+        )}
+
+        {activeTab === 'ai' && (
+          <section className="settings-section">
+            <label className="field-block">
+              Provider
+              <select value={provider} onChange={(event) => setProvider(event.target.value)}>
+                <option value="mock">模拟输出</option>
+                <option value="openai">OpenAI 兼容</option>
+                <option value="custom">自定义</option>
+              </select>
+            </label>
+            <TextField label="API Key" value={apiKey} onChange={setApiKey} />
+            <TextField label="Model" value={model} onChange={setModel} />
+            <TextField label="Base URL" value={baseUrl} onChange={setBaseUrl} />
+            <p className="settings-note">
+              当前为本地原型配置。后续全栈版本会改为服务端代理调用，避免密钥暴露在前端。
+            </p>
+            {testResult && <p className="settings-result">{testResult}</p>}
+            <button
+              type="button"
+              onClick={() => {
+                setTestResult(provider === 'mock' ? '模拟输出可用。' : '配置已保存前仅做本地字段校验。')
+              }}
+            >
+              测试连接
+            </button>
+          </section>
+        )}
+
+        <footer>
+          <button type="button" onClick={props.onClose}>
+            取消
+          </button>
+          <button type="submit" className="primary-button">
+            保存设置
           </button>
         </footer>
       </form>

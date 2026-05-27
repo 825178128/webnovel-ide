@@ -17,11 +17,18 @@ export type AITaskType = 'continue' | 'polish' | 'summarize' | 'rewrite'
 
 export type AIRequestStatus = 'pending' | 'running' | 'succeeded' | 'failed'
 
+export type AppTheme = 'dark' | 'light'
+
 export interface AIConfig {
   provider: string
   apiKey: string
   model: string
   baseUrl?: string
+  updatedAt?: string
+}
+
+export interface AppSettings {
+  theme: AppTheme
   updatedAt?: string
 }
 
@@ -142,6 +149,7 @@ export interface WebnovelIDEState {
   chapterSettings: ChapterSetting[]
   aiRequests: AIRequest[]
   aiConfig?: AIConfig
+  appSettings?: AppSettings
   activeProjectId?: string
   activeChapterId?: string
 }

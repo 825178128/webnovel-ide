@@ -33,7 +33,7 @@ export interface WorkspacePageProps {
   selectedCharacterId?: string
   selectedSettingId?: string
   onBack: () => void
-  onOpenAISettings: () => void
+  onOpenAppSettings: () => void
   onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
   onSelectChapter: (chapterId: string) => void
   onSelectCharacter: (characterId: string) => void
@@ -346,11 +346,11 @@ export function WorkspacePage(props: WorkspacePageProps) {
           <Icon name="database" size={19} />
         </button>
         <span />
-        <button title="AI 配置" onClick={props.onOpenAISettings}>
-          <Icon name="sparkles" size={19} />
+        <button title="应用设置" onClick={props.onOpenAppSettings}>
+          <Icon name="settings" size={19} />
         </button>
         <button title="作品设置" onClick={() => setProjectSettingsOpen(true)}>
-          <Icon name="settings" size={19} />
+          <Icon name="book" size={19} />
         </button>
       </nav>
 

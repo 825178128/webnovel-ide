@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AISettingsDialog } from './components/dialogs'
+import { AppSettingsDialog } from './components/dialogs'
 import { WorkspacePage, type MainView } from './pages/WorkspacePage'
 import { ProjectsPage } from './pages/ProjectsPage'
 import { loadState, saveState, seedProjectDefaults } from './storage'
@@ -15,7 +15,7 @@ export function App() {
   const [selectedCharacterId, setSelectedCharacterId] = useState<string>()
   const [selectedSettingId, setSelectedSettingId] = useState<string>()
   const [createProjectOpen, setCreateProjectOpen] = useState(false)
-  const [aiSettingsOpen, setAISettingsOpen] = useState(false)
+  const [appSettingsOpen, setAppSettingsOpen] = useState(false)
 
   useEffect(() => {
     saveState(state)
@@ -74,23 +74,25 @@ export function App() {
 
   if (screen === 'projects' || !activeProject) {
     return (
-      <ProjectsPage
-        state={state}
-        createProjectOpen={createProjectOpen}
-        aiSettingsOpen={aiSettingsOpen}
-        onCreateProject={() => setCreateProjectOpen(true)}
-        onOpenAISettings={() => setAISettingsOpen(true)}
-        onOpenProject={openProject}
-        onPatchState={patchState}
-        onCloseCreateProject={() => setCreateProjectOpen(false)}
-        onCloseAISettings={() => setAISettingsOpen(false)}
-        onSubmitProject={createProject}
-      />
+      <div className={`app-root theme-${state.appSettings?.theme ?? 'dark'}`}>
+        <ProjectsPage
+          state={state}
+          createProjectOpen={createProjectOpen}
+          appSettingsOpen={appSettingsOpen}
+          onCreateProject={() => setCreateProjectOpen(true)}
+          onOpenAppSettings={() => setAppSettingsOpen(true)}
+          onOpenProject={openProject}
+          onPatchState={patchState}
+          onCloseCreateProject={() => setCreateProjectOpen(false)}
+          onCloseAppSettings={() => setAppSettingsOpen(false)}
+          onSubmitProject={createProject}
+        />
+      </div>
     )
   }
 
   return (
-    <>
+    <div className={`app-root theme-${state.appSettings?.theme ?? 'dark'}`}>
       <WorkspacePage
         state={state}
         project={activeProject}
@@ -99,7 +101,7 @@ export function App() {
         selectedCharacterId={selectedCharacterId}
         selectedSettingId={selectedSettingId}
         onBack={() => setScreen('projects')}
-        onOpenAISettings={() => setAISettingsOpen(true)}
+        onOpenAppSettings={() => setAppSettingsOpen(true)}
         onPatchState={patchState}
         onSelectChapter={(chapterId) => {
           patchState((current) => ({ ...current, activeChapterId: chapterId }))
@@ -115,13 +117,13 @@ export function App() {
         }}
         onSetMainView={setMainView}
       />
-      {aiSettingsOpen && (
-        <AISettingsDialog
-          config={state.aiConfig}
-          onClose={() => setAISettingsOpen(false)}
+      {appSettingsOpen && (
+        <AppSettingsDialog
+          state={state}
+          onClose={() => setAppSettingsOpen(false)}
           onPatchState={patchState}
         />
       )}
-    </>
+    </div>
   )
 }

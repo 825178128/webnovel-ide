@@ -1,4 +1,4 @@
-import { CreateProjectDialog, AISettingsDialog } from '../components/dialogs'
+import { AppSettingsDialog, CreateProjectDialog } from '../components/dialogs'
 import { Icon } from '../components/Icon'
 import type { Project, WebnovelIDEState } from '../types'
 import { formatDateTime } from '../utils'
@@ -6,11 +6,11 @@ import { formatDateTime } from '../utils'
 export interface ProjectsPageProps {
   state: WebnovelIDEState
   createProjectOpen: boolean
-  aiSettingsOpen: boolean
+  appSettingsOpen: boolean
   onCreateProject: () => void
-  onOpenAISettings: () => void
+  onOpenAppSettings: () => void
   onCloseCreateProject: () => void
-  onCloseAISettings: () => void
+  onCloseAppSettings: () => void
   onOpenProject: (projectId: string) => void
   onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
   onSubmitProject: (form: Pick<Project, 'title' | 'genre' | 'synopsis' | 'targetPlatform'>) => void
@@ -33,9 +33,9 @@ export function ProjectsPage(props: ProjectsPageProps) {
           <h1>作品</h1>
         </div>
         <div className="header-actions">
-          <button className="button-with-icon" onClick={props.onOpenAISettings}>
-            <Icon name="sparkles" />
-            <span>AI 配置</span>
+          <button className="button-with-icon" onClick={props.onOpenAppSettings}>
+            <Icon name="settings" />
+            <span>应用设置</span>
           </button>
           <button className="primary-button button-with-icon" onClick={props.onCreateProject}>
             <Icon name="plus" />
@@ -97,10 +97,10 @@ export function ProjectsPage(props: ProjectsPageProps) {
           onSubmit={props.onSubmitProject}
         />
       )}
-      {props.aiSettingsOpen && (
-        <AISettingsDialog
-          config={props.state.aiConfig}
-          onClose={props.onCloseAISettings}
+      {props.appSettingsOpen && (
+        <AppSettingsDialog
+          state={props.state}
+          onClose={props.onCloseAppSettings}
           onPatchState={props.onPatchState}
         />
       )}

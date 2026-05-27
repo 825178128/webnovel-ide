@@ -30,6 +30,10 @@ export function createInitialState(): WebnovelIDEState {
       baseUrl: '',
       updatedAt: timestamp,
     },
+    appSettings: {
+      theme: 'dark',
+      updatedAt: timestamp,
+    },
   }
 }
 
@@ -41,7 +45,14 @@ export function loadState(): WebnovelIDEState {
   }
 
   try {
-    return JSON.parse(raw) as WebnovelIDEState
+    const parsed = JSON.parse(raw) as WebnovelIDEState
+    return {
+      ...parsed,
+      appSettings: parsed.appSettings ?? {
+        theme: 'dark',
+        updatedAt: nowIso(),
+      },
+    }
   } catch {
     return createInitialState()
   }
