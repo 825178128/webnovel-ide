@@ -46,9 +46,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
   const projectVolumes = props.state.volumes
     .filter((volume) => volume.projectId === props.project.id)
     .sort((a, b) => a.order - b.order)
-  const projectChapters = props.state.chapters
-    .filter((chapter) => chapter.projectId === props.project.id)
-    .sort((a, b) => a.order - b.order)
+  const projectChapters = props.state.chapters.filter((chapter) => chapter.projectId === props.project.id)
   const projectCharacters = props.state.characters.filter(
     (character) => character.projectId === props.project.id,
   )
@@ -97,6 +95,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
     const timestamp = nowIso()
     const chapterId = createId('chapter')
     const chaptersInVolume = projectChapters.filter((chapter) => chapter.volumeId === volume.id)
+    const nextOrder = Math.max(0, ...chaptersInVolume.map((chapter) => chapter.order)) + 1
 
     props.onPatchState((current) => ({
       ...current,
@@ -112,7 +111,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
           content: '',
           status: 'draft',
           wordCount: 0,
-          order: chaptersInVolume.length + 1,
+          order: nextOrder,
           createdAt: timestamp,
           updatedAt: timestamp,
         },
@@ -255,9 +254,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
     const target = projectChapters.find((item) => item.id === targetChapterId)
     if (!source || !target || source.volumeId !== target.volumeId) return
 
-    const siblings = projectChapters
-      .filter((item) => item.volumeId === source.volumeId)
-      .sort((a, b) => a.order - b.order)
+    const siblings = projectChapters.filter((item) => item.volumeId === source.volumeId)
     const ordered = siblings.filter((item) => item.id !== sourceChapterId)
     const targetIndex = ordered.findIndex((item) => item.id === targetChapterId)
     ordered.splice(targetIndex, 0, source)
@@ -266,11 +263,16 @@ export function WorkspacePage(props: WorkspacePageProps) {
 
     props.onPatchState((current) => ({
       ...current,
-      chapters: current.chapters.map((item) => {
-        const order = nextOrderById.get(item.id)
-        if (order) return { ...item, order, updatedAt: timestamp }
-        return item
-      }),
+      chapters: (() => {
+        const firstSiblingIndex = current.chapters.findIndex((item) => item.volumeId === source.volumeId)
+        const reorderedSiblings = ordered.map((item) => {
+          const order = nextOrderById.get(item.id)
+          return order ? { ...item, order, updatedAt: timestamp } : item
+        })
+        const nextChapters = current.chapters.filter((item) => item.volumeId !== source.volumeId)
+        nextChapters.splice(firstSiblingIndex, 0, ...reorderedSiblings)
+        return nextChapters
+      })(),
     }))
   }
 
@@ -471,7 +473,6 @@ export function WorkspacePage(props: WorkspacePageProps) {
                 <div className="chapter-list-scroll">
                   {projectChapters
                     .filter((chapter) => chapter.volumeId === volume.id)
-                    .sort((a, b) => a.order - b.order)
                     .map((chapter) => (
                       <div
                         className={`chapter-row ${draggingChapterId === chapter.id ? 'dragging' : ''}`}

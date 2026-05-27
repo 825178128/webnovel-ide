@@ -29,9 +29,7 @@ export function App() {
   }
 
   function openProject(projectId: string) {
-    const firstChapter = state.chapters
-      .filter((chapter) => chapter.projectId === projectId)
-      .sort((a, b) => a.order - b.order)[0]
+    const firstChapter = state.chapters.find((chapter) => chapter.projectId === projectId)
 
     patchState((current) => ({
       ...current,

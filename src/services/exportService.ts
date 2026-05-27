@@ -20,7 +20,6 @@ export function buildBookExport(
     .map((volume) => {
       const volumeChapters = chapters
         .filter((chapter) => chapter.volumeId === volume.id)
-        .sort((a, b) => a.order - b.order)
 
       const chapterText = volumeChapters
         .map((chapter) => buildChapterExport(chapter, format))
