@@ -11,6 +11,7 @@ import type {
 } from '../types'
 import { countWords, nowIso } from '../utils'
 import { FormPanel, TextAreaField, TextField } from './forms'
+import { Icon } from './Icon'
 
 export function ChapterEditor(props: {
   chapter: Chapter
@@ -55,17 +56,29 @@ export function ChapterEditor(props: {
             </option>
           ))}
         </select>
-        <button type="button" onClick={() => updateChapter({ summary: summarizeChapter(props.chapter) })}>
-          总结本章
+        <button
+          type="button"
+          className="button-with-icon"
+          onClick={() => updateChapter({ summary: summarizeChapter(props.chapter) })}
+        >
+          <Icon name="sparkles" />
+          <span>总结本章</span>
         </button>
-        <button type="button" onClick={() => props.onExportChapter('txt')}>
-          导出 TXT
+        <button type="button" className="button-with-icon" onClick={() => props.onExportChapter('txt')}>
+          <Icon name="download" />
+          <span>导出 TXT</span>
         </button>
-        <button type="button" onClick={() => props.onExportChapter('md')}>
-          导出 MD
+        <button type="button" className="button-with-icon" onClick={() => props.onExportChapter('md')}>
+          <Icon name="download" />
+          <span>导出 MD</span>
         </button>
-        <button type="button" className="danger-button" onClick={() => props.onDeleteChapter(props.chapter.id)}>
-          删除
+        <button
+          type="button"
+          className="danger-button button-with-icon"
+          onClick={() => props.onDeleteChapter(props.chapter.id)}
+        >
+          <Icon name="trash" />
+          <span>删除</span>
         </button>
         <span>{props.chapter.wordCount} 字</span>
       </div>

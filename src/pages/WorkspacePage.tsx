@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ContextPanel } from '../components/ContextPanel'
+import { Icon } from '../components/Icon'
 import {
   CreateChapterDialog,
   CreateCharacterDialog,
@@ -272,55 +273,127 @@ export function WorkspacePage(props: WorkspacePageProps) {
   return (
     <div className={`workspace ${assistantCollapsed ? 'assistant-collapsed' : ''}`}>
       <header className="workspace-topbar">
-        <button className="ghost-button" onClick={props.onBack}>
-          返回
+        <div className="window-controls" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+        <button className="topbar-back" aria-label="返回作品列表" title="返回作品列表" onClick={props.onBack}>
+          <Icon name="arrow-left" />
         </button>
-        <div>
+        <div className="workspace-title">
           <strong>{props.project.title}</strong>
           <span>{props.chapter ? props.chapter.title : '未选择章节'}</span>
         </div>
         <div className="topbar-meta">
           <div className="toolbar-group">
-            <button disabled={!props.chapter} onClick={() => exportActiveChapter('txt')}>
-              本章 TXT
+            <button className="button-with-icon" disabled={!props.chapter} onClick={() => exportActiveChapter('txt')}>
+              <Icon name="file" />
+              <span>本章 TXT</span>
             </button>
-            <button disabled={!props.chapter} onClick={() => exportActiveChapter('md')}>
-              本章 MD
+            <button className="button-with-icon" disabled={!props.chapter} onClick={() => exportActiveChapter('md')}>
+              <Icon name="file" />
+              <span>本章 MD</span>
             </button>
-            <button onClick={() => exportBook('txt')}>全书 TXT</button>
-            <button onClick={() => exportBook('md')}>全书 MD</button>
+            <button className="button-with-icon" onClick={() => exportBook('txt')}>
+              <Icon name="download" />
+              <span>全书 TXT</span>
+            </button>
+            <button className="button-with-icon" onClick={() => exportBook('md')}>
+              <Icon name="download" />
+              <span>全书 MD</span>
+            </button>
           </div>
           <div className="toolbar-group">
-            <button onClick={props.onOpenAISettings}>AI 配置</button>
-            <button onClick={() => setProjectSettingsOpen(true)}>作品设置</button>
-            <button onClick={() => setAssistantCollapsed((value) => !value)}>
-              {assistantCollapsed ? '展开助手' : '收起助手'}
+            <button className="button-with-icon" onClick={props.onOpenAISettings}>
+              <Icon name="sparkles" />
+              <span>AI 配置</span>
+            </button>
+            <button className="button-with-icon" onClick={() => setProjectSettingsOpen(true)}>
+              <Icon name="settings" />
+              <span>作品设置</span>
+            </button>
+            <button className="button-with-icon" onClick={() => setAssistantCollapsed((value) => !value)}>
+              <Icon name={assistantCollapsed ? 'panel-right' : 'panel-left'} />
+              <span>{assistantCollapsed ? '展开助手' : '收起助手'}</span>
             </button>
           </div>
           <div className="save-status">
+            <Icon name="save" />
             <span>已保存</span>
             <strong>{props.chapter?.wordCount ?? 0} 字</strong>
           </div>
         </div>
       </header>
 
+      <nav className="activity-bar" aria-label="工作台导航">
+        <button
+          className={props.mainView === 'chapter' ? 'active' : ''}
+          title="章节"
+          onClick={() => props.onSetMainView('chapter')}
+        >
+          <Icon name="book" size={19} />
+        </button>
+        <button
+          className={props.mainView === 'character' ? 'active' : ''}
+          title="人物"
+          onClick={() => {
+            if (selectedCharacter) props.onSetMainView('character')
+          }}
+        >
+          <Icon name="users" size={19} />
+        </button>
+        <button
+          className={props.mainView === 'setting' ? 'active' : ''}
+          title="设定"
+          onClick={() => {
+            if (selectedSetting) props.onSetMainView('setting')
+          }}
+        >
+          <Icon name="database" size={19} />
+        </button>
+        <span />
+        <button title="AI 配置" onClick={props.onOpenAISettings}>
+          <Icon name="sparkles" size={19} />
+        </button>
+        <button title="作品设置" onClick={() => setProjectSettingsOpen(true)}>
+          <Icon name="settings" size={19} />
+        </button>
+      </nav>
+
       <aside className="project-sidebar">
+        <div className="sidebar-title">
+          <span>资源管理器</span>
+          <strong>{props.project.title}</strong>
+        </div>
         <section>
           <div className="sidebar-heading">
-            <h2>章节</h2>
-            <button onClick={() => setCreateDialog({ type: 'volume' })}>+ 卷</button>
+            <h2>
+              <Icon name="book" />
+              <span>章节</span>
+            </h2>
+            <button className="button-with-icon" onClick={() => setCreateDialog({ type: 'volume' })}>
+              <Icon name="plus" />
+              <span>新卷</span>
+            </button>
           </div>
           {projectVolumes.map((volume) => (
             <div className="volume-block" key={volume.id}>
               <div className="volume-title">
                 <span>{volume.title}</span>
                 <div className="inline-actions">
-                  <button onClick={() => renameVolume(volume)}>改名</button>
-                  <button onClick={() => setCreateDialog({ type: 'chapter', volumeId: volume.id })}>
-                    + 章
+                  <button className="icon-button" title="重命名卷" onClick={() => renameVolume(volume)}>
+                    <Icon name="edit" />
                   </button>
-                  <button className="danger-button" onClick={() => deleteVolume(volume.id)}>
-                    删
+                  <button
+                    className="icon-button"
+                    title="新建章节"
+                    onClick={() => setCreateDialog({ type: 'chapter', volumeId: volume.id })}
+                  >
+                    <Icon name="plus" />
+                  </button>
+                  <button className="icon-button danger-button" title="删除卷" onClick={() => deleteVolume(volume.id)}>
+                    <Icon name="trash" />
                   </button>
                 </div>
               </div>
@@ -336,8 +409,12 @@ export function WorkspacePage(props: WorkspacePageProps) {
                       <small>{chapterStatusLabels[chapter.status]}</small>
                     </button>
                     <div className="chapter-row-actions">
-                      <button onClick={() => moveChapter(chapter.id, -1)}>↑</button>
-                      <button onClick={() => moveChapter(chapter.id, 1)}>↓</button>
+                      <button className="icon-button" title="上移章节" onClick={() => moveChapter(chapter.id, -1)}>
+                        <Icon name="arrow-up" />
+                      </button>
+                      <button className="icon-button" title="下移章节" onClick={() => moveChapter(chapter.id, 1)}>
+                        <Icon name="arrow-down" />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -347,8 +424,13 @@ export function WorkspacePage(props: WorkspacePageProps) {
 
         <section>
           <div className="sidebar-heading">
-            <h2>人物</h2>
-            <button onClick={() => setCreateDialog({ type: 'character' })}>+</button>
+            <h2>
+              <Icon name="users" />
+              <span>人物</span>
+            </h2>
+            <button className="icon-button" title="新建人物" onClick={() => setCreateDialog({ type: 'character' })}>
+              <Icon name="plus" />
+            </button>
           </div>
           {projectCharacters.map((character) => (
             <button
@@ -363,8 +445,13 @@ export function WorkspacePage(props: WorkspacePageProps) {
 
         <section>
           <div className="sidebar-heading">
-            <h2>设定</h2>
-            <button onClick={() => setCreateDialog({ type: 'setting' })}>+</button>
+            <h2>
+              <Icon name="database" />
+              <span>设定</span>
+            </h2>
+            <button className="icon-button" title="新建设定" onClick={() => setCreateDialog({ type: 'setting' })}>
+              <Icon name="plus" />
+            </button>
           </div>
           {projectSettings.map((setting) => (
             <button
@@ -379,6 +466,18 @@ export function WorkspacePage(props: WorkspacePageProps) {
       </aside>
 
       <main className="main-panel">
+        <div className="editor-tabs">
+          <button className="active">
+            <Icon name={props.mainView === 'chapter' ? 'file' : props.mainView === 'character' ? 'users' : 'database'} />
+            <span>
+              {props.mainView === 'chapter'
+                ? props.chapter?.title || '未选择章节'
+                : props.mainView === 'character'
+                  ? selectedCharacter?.name || '人物'
+                  : selectedSetting?.title || '设定'}
+            </span>
+          </button>
+        </div>
         {props.mainView === 'chapter' && props.chapter && (
           <ChapterEditor
             chapter={props.chapter}
@@ -413,6 +512,13 @@ export function WorkspacePage(props: WorkspacePageProps) {
           onPatchState={props.onPatchState}
         />
       )}
+      <footer className="workspace-statusbar">
+        <span>{props.chapter?.status ? chapterStatusLabels[props.chapter.status] : '未选择章节'}</span>
+        <span>{props.chapter?.wordCount ?? 0} 字</span>
+        <span>{projectChapters.length} 章</span>
+        <span>{projectCharacters.length} 人物</span>
+        <span>{projectSettings.length} 设定</span>
+      </footer>
       {projectSettingsOpen && (
         <ProjectSettingsDialog
           project={props.project}

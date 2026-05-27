@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Icon } from './Icon'
 import { aiTaskLabels, chapterStatusLabels } from '../constants/labels'
 import { buildMockAIResult } from '../services/aiMock'
 import { toggleChapterCharacter, toggleChapterSetting } from '../services/stateRelations'
@@ -126,7 +127,10 @@ export function ContextPanel(props: {
       <section className="ai-panel">
         <div className="ai-panel-header">
           <div>
-            <h2>AI 助手</h2>
+            <h2>
+              <Icon name="sparkles" />
+              <span>AI 助手</span>
+            </h2>
             <p className="muted">当前模型：{props.state.aiConfig?.model ?? 'local-prototype'}</p>
           </div>
           <span>Copilot</span>
@@ -150,13 +154,15 @@ export function ContextPanel(props: {
         />
         </label>
         <button className="primary-button" onClick={generateMockAI} disabled={!props.chapter}>
-          生成模拟结果
+          <Icon name="sparkles" />
+          <span>生成模拟结果</span>
         </button>
         <div className="ai-output-block">
           <div className="ai-output-title">
             <span>输出</span>
-            <button onClick={insertResult} disabled={!result}>
-              插入正文
+            <button className="button-with-icon" onClick={insertResult} disabled={!result}>
+              <Icon name="file" />
+              <span>插入正文</span>
             </button>
           </div>
           <div className="ai-result">{result || 'AI 输出会显示在这里。'}</div>

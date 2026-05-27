@@ -1,4 +1,5 @@
 import { CreateProjectDialog, AISettingsDialog } from '../components/dialogs'
+import { Icon } from '../components/Icon'
 import type { Project, WebnovelIDEState } from '../types'
 import { formatDateTime } from '../utils'
 
@@ -32,9 +33,13 @@ export function ProjectsPage(props: ProjectsPageProps) {
           <h1>作品</h1>
         </div>
         <div className="header-actions">
-          <button onClick={props.onOpenAISettings}>AI 配置</button>
-          <button className="primary-button" onClick={props.onCreateProject}>
-            新建作品
+          <button className="button-with-icon" onClick={props.onOpenAISettings}>
+            <Icon name="sparkles" />
+            <span>AI 配置</span>
+          </button>
+          <button className="primary-button button-with-icon" onClick={props.onCreateProject}>
+            <Icon name="plus" />
+            <span>新建作品</span>
           </button>
         </div>
       </header>
@@ -43,8 +48,9 @@ export function ProjectsPage(props: ProjectsPageProps) {
         <section className="empty-state">
           <h2>创建第一本作品</h2>
           <p>先建立作品工程，再逐步添加章节、人物、设定和 AI 辅助流程。</p>
-          <button className="primary-button" onClick={props.onCreateProject}>
-            新建作品
+          <button className="primary-button button-with-icon" onClick={props.onCreateProject}>
+            <Icon name="plus" />
+            <span>新建作品</span>
           </button>
         </section>
       ) : (
@@ -75,7 +81,10 @@ export function ProjectsPage(props: ProjectsPageProps) {
               </dl>
               <div className="card-footer">
                 <span>更新于 {formatDateTime(project.updatedAt)}</span>
-                <button onClick={() => props.onOpenProject(project.id)}>进入工作台</button>
+                <button className="button-with-icon" onClick={() => props.onOpenProject(project.id)}>
+                  <Icon name="book" />
+                  <span>进入工作台</span>
+                </button>
               </div>
             </article>
           ))}
