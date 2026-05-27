@@ -742,6 +742,27 @@ textarea {
   padding: 4px;
 }
 
+.assistant-toolbar {
+  border-color: transparent;
+  background: transparent;
+  padding: 0;
+}
+
+.assistant-toggle-button {
+  width: 34px;
+  height: 34px;
+  border-color: var(--chrome-border) !important;
+  background: var(--chrome-bg-2) !important;
+  color: var(--muted-strong) !important;
+  padding: 0 !important;
+}
+
+.assistant-toggle-button:hover:not(:disabled) {
+  background: var(--sidebar-active) !important;
+  color: var(--text) !important;
+  box-shadow: none;
+}
+
 .topbar-meta button,
 .toolbar-group button {
   border-color: transparent;

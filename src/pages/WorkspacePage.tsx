@@ -364,10 +364,14 @@ export function WorkspacePage(props: WorkspacePageProps) {
         </div>
         <div className="workspace-topbar-spacer" />
         <div className="topbar-meta">
-          <div className="toolbar-group">
-            <button className="button-with-icon" onClick={() => setAssistantCollapsed((value) => !value)}>
+          <div className="toolbar-group assistant-toolbar">
+            <button
+              className="icon-button assistant-toggle-button"
+              aria-label={assistantCollapsed ? '打开右侧助手' : '隐藏右侧助手'}
+              title={assistantCollapsed ? '打开右侧助手' : '隐藏右侧助手'}
+              onClick={() => setAssistantCollapsed((value) => !value)}
+            >
               <Icon name={assistantCollapsed ? 'panel-right' : 'panel-left'} />
-              <span>{assistantCollapsed ? '打开助手' : '隐藏助手'}</span>
             </button>
           </div>
         </div>
