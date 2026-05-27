@@ -243,74 +243,89 @@ export function AppSettingsDialog(props: {
           saveSettings()
         }}
       >
-        <div className="settings-tabs" role="tablist" aria-label="应用设置分类">
-          <button
-            type="button"
-            className={activeTab === 'appearance' ? 'active' : ''}
-            onClick={() => setActiveTab('appearance')}
-          >
-            外观
-          </button>
-          <button
-            type="button"
-            className={activeTab === 'ai' ? 'active' : ''}
-            onClick={() => setActiveTab('ai')}
-          >
-            AI
-          </button>
-        </div>
-
-        {activeTab === 'appearance' && (
-          <section className="settings-section">
-            <div className="theme-options">
-              <button
-                type="button"
-                className={`theme-option theme-option-dark ${theme === 'dark' ? 'active' : ''}`}
-                onClick={() => setTheme('dark')}
-              >
-                <span>专业深色</span>
-                <small>适合长时间写作和 IDE 工作台</small>
-              </button>
-              <button
-                type="button"
-                className={`theme-option theme-option-light ${theme === 'light' ? 'active' : ''}`}
-                onClick={() => setTheme('light')}
-              >
-                <span>清爽浅色</span>
-                <small>适合白天阅读、整理设定和审稿</small>
-              </button>
-            </div>
-            <p className="settings-note">主题会作用到项目列表、工作台、侧栏、编辑器和弹窗。</p>
-          </section>
-        )}
-
-        {activeTab === 'ai' && (
-          <section className="settings-section">
-            <label className="field-block">
-              Provider
-              <select value={provider} onChange={(event) => setProvider(event.target.value)}>
-                <option value="mock">模拟输出</option>
-                <option value="openai">OpenAI 兼容</option>
-                <option value="custom">自定义</option>
-              </select>
-            </label>
-            <TextField label="API Key" value={apiKey} onChange={setApiKey} />
-            <TextField label="Model" value={model} onChange={setModel} />
-            <TextField label="Base URL" value={baseUrl} onChange={setBaseUrl} />
-            <p className="settings-note">
-              当前为本地原型配置。后续全栈版本会改为服务端代理调用，避免密钥暴露在前端。
-            </p>
-            {testResult && <p className="settings-result">{testResult}</p>}
+        <div className="settings-layout">
+          <nav className="settings-nav" aria-label="应用设置分类">
             <button
               type="button"
-              onClick={() => {
-                setTestResult(provider === 'mock' ? '模拟输出可用。' : '配置已保存前仅做本地字段校验。')
-              }}
+              className={activeTab === 'appearance' ? 'active' : ''}
+              onClick={() => setActiveTab('appearance')}
             >
-              测试连接
+              <span>外观</span>
+              <small>主题与界面风格</small>
             </button>
-          </section>
-        )}
+            <button
+              type="button"
+              className={activeTab === 'ai' ? 'active' : ''}
+              onClick={() => setActiveTab('ai')}
+            >
+              <span>AI</span>
+              <small>模型配置壳</small>
+            </button>
+          </nav>
+
+          <div className="settings-content">
+            {activeTab === 'appearance' && (
+              <section className="settings-section">
+                <div className="settings-section-header">
+                  <h3>外观</h3>
+                  <p>主题会作用到项目列表、工作台、侧栏、编辑器和弹窗。</p>
+                </div>
+                <div className="theme-options">
+                  <button
+                    type="button"
+                    className={`theme-option theme-option-dark ${theme === 'dark' ? 'active' : ''}`}
+                    onClick={() => setTheme('dark')}
+                  >
+                    <span>专业深色</span>
+                    <small>适合长时间写作和 IDE 工作台</small>
+                  </button>
+                  <button
+                    type="button"
+                    className={`theme-option theme-option-light ${theme === 'light' ? 'active' : ''}`}
+                    onClick={() => setTheme('light')}
+                  >
+                    <span>清爽浅色</span>
+                    <small>适合白天阅读、整理设定和审稿</small>
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {activeTab === 'ai' && (
+              <section className="settings-section">
+                <div className="settings-section-header">
+                  <h3>AI</h3>
+                  <p>当前仅作为 UI 原型配置壳，不接入真实请求。</p>
+                </div>
+                <label className="field-block">
+                  Provider
+                  <select value={provider} onChange={(event) => setProvider(event.target.value)}>
+                    <option value="mock">模拟输出</option>
+                    <option value="openai">OpenAI 兼容</option>
+                    <option value="custom">自定义</option>
+                  </select>
+                </label>
+                <TextField label="API Key" value={apiKey} onChange={setApiKey} />
+                <TextField label="Model" value={model} onChange={setModel} />
+                <TextField label="Base URL" value={baseUrl} onChange={setBaseUrl} />
+                <p className="settings-note">
+                  后续全栈版本会改为服务端代理调用，避免密钥暴露在前端。
+                </p>
+                {testResult && <p className="settings-result">{testResult}</p>}
+                <div className="settings-inline-actions">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTestResult(provider === 'mock' ? '模拟输出可用。' : '配置已保存前仅做本地字段校验。')
+                    }}
+                  >
+                    测试连接
+                  </button>
+                </div>
+              </section>
+            )}
+          </div>
+        </div>
 
         <footer>
           <button type="button" onClick={props.onClose}>

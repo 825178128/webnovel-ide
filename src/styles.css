@@ -452,7 +452,7 @@ textarea {
 }
 
 .settings-dialog-shell {
-  width: min(760px, calc(100vw - 48px));
+  width: min(880px, calc(100vw - 48px));
 }
 
 .dialog-body {
@@ -513,39 +513,95 @@ textarea {
 }
 
 .app-settings-dialog {
-  width: 100%;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0;
   min-width: 0;
-  overflow: visible;
+  min-height: min(560px, calc(100vh - 150px));
+  overflow: hidden;
+  padding: 0;
 }
 
-.settings-tabs {
-  display: inline-flex;
-  width: fit-content;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+.settings-layout {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.settings-nav {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  overflow: auto;
+  border-right: 1px solid var(--border);
   background: var(--surface-muted);
-  padding: 4px;
+  padding: 12px;
 }
 
-.settings-tabs button {
+.settings-nav button {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
   border-color: transparent;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--muted-strong);
-  font-weight: 800;
-  padding: 7px 14px;
+  padding: 10px;
+  text-align: left;
 }
 
-.settings-tabs button.active {
+.settings-nav button:hover:not(:disabled),
+.settings-nav button.active {
   border-color: var(--border);
   background: var(--surface);
   color: var(--text);
-  box-shadow: var(--shadow-soft);
+  box-shadow: none;
+}
+
+.settings-nav button span {
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.settings-nav button small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.settings-content {
+  min-width: 0;
+  overflow: auto;
+  padding: 18px 20px;
 }
 
 .settings-section {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
+}
+
+.settings-section-header {
+  display: grid;
+  gap: 5px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 14px;
+}
+
+.settings-section-header h3,
+.settings-section-header p {
+  margin: 0;
+}
+
+.settings-section-header h3 {
+  color: var(--text);
+  font-size: 18px;
+}
+
+.settings-section-header p {
+  color: var(--muted);
+  line-height: 1.55;
 }
 
 .theme-options {
@@ -632,6 +688,17 @@ textarea {
 .settings-result {
   background: var(--success-soft);
   color: var(--success);
+}
+
+.settings-inline-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.app-settings-dialog > footer {
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  padding: 14px 20px;
 }
 
 .workspace {
