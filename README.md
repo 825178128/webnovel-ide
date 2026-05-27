@@ -18,7 +18,9 @@
 
 ## Current Phase
 
-Phase 0: 立项与需求分析。
+V1 UI 原型完善。
+
+当前 `v1-development` 分支主目标是完成商业级网文 IDE 的 UI 原型、主题体系、布局与交互壳验收。具体业务功能模块不在本分支深入实现。
 
 当前已产出：
 
@@ -26,6 +28,7 @@ Phase 0: 立项与需求分析。
 - [MVP 范围与验收标准](D:/codex/webnovel-ide/docs/product/02-mvp-scope.md)
 - [用户流程与页面流转](D:/codex/webnovel-ide/docs/product/03-user-workflows.md)
 - [UI 信息架构](D:/codex/webnovel-ide/docs/product/04-ui-information-architecture.md)
+- [V1 UI 验收标准](D:/codex/webnovel-ide/docs/product/05-v1-ui-acceptance-criteria.md)
 - [技术栈选型](D:/codex/webnovel-ide/docs/architecture/01-tech-stack.md)
 - [MVP 数据模型](D:/codex/webnovel-ide/docs/architecture/02-data-model.md)
 
