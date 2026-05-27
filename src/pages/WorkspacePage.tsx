@@ -24,6 +24,7 @@ type CreateDialogState =
   | undefined
 
 type VolumeMenuState = { volumeId: string; x: number; y: number } | undefined
+type ChapterMenuState = { chapterId: string; x: number; y: number } | undefined
 
 export interface WorkspacePageProps {
   state: WebnovelIDEState
@@ -58,9 +59,10 @@ export function WorkspacePage(props: WorkspacePageProps) {
   const selectedSetting = projectSettings.find((setting) => setting.id === props.selectedSettingId)
   const [projectSettingsOpen, setProjectSettingsOpen] = useState(false)
   const [createDialog, setCreateDialog] = useState<CreateDialogState>()
-  const [assistantCollapsed, setAssistantCollapsed] = useState(true)
+  const [assistantCollapsed, setAssistantCollapsed] = useState(false)
   const [draggingChapterId, setDraggingChapterId] = useState<string>()
   const [volumeMenu, setVolumeMenu] = useState<VolumeMenuState>()
+  const [chapterMenu, setChapterMenu] = useState<ChapterMenuState>()
 
   function createVolume(form: Pick<Volume, 'title' | 'summary'>) {
     const timestamp = nowIso()
@@ -203,6 +205,25 @@ export function WorkspacePage(props: WorkspacePageProps) {
   function openVolumeMenu(event: MouseEvent, volumeId: string) {
     event.preventDefault()
     setVolumeMenu({ volumeId, x: event.clientX, y: event.clientY })
+    setChapterMenu(undefined)
+  }
+
+  function openChapterMenu(event: MouseEvent, chapterId: string) {
+    event.preventDefault()
+    setChapterMenu({ chapterId, x: event.clientX, y: event.clientY })
+    setVolumeMenu(undefined)
+  }
+
+  function renameChapter(chapter: Chapter) {
+    const title = window.prompt('章节名', chapter.title)
+    if (!title?.trim()) return
+
+    props.onPatchState((current) => ({
+      ...current,
+      chapters: current.chapters.map((item) =>
+        item.id === chapter.id ? { ...item, title: title.trim(), updatedAt: nowIso() } : item,
+      ),
+    }))
   }
 
   function reorderChapter(sourceChapterId: string | undefined, targetChapterId: string) {
@@ -290,7 +311,13 @@ export function WorkspacePage(props: WorkspacePageProps) {
   }
 
   return (
-    <div className={`workspace ${assistantCollapsed ? 'assistant-collapsed' : ''}`} onClick={() => setVolumeMenu(undefined)}>
+    <div
+      className={`workspace ${assistantCollapsed ? 'assistant-collapsed' : ''}`}
+      onClick={() => {
+        setVolumeMenu(undefined)
+        setChapterMenu(undefined)
+      }}
+    >
       <header className="workspace-topbar">
         <div className="topbar-left">
           <button className="topbar-back" aria-label="返回作品列表" title="返回作品列表" onClick={props.onBack}>
@@ -408,6 +435,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
                       reorderChapter(draggingChapterId, chapter.id)
                       setDraggingChapterId(undefined)
                     }}
+                    onContextMenu={(event) => openChapterMenu(event, chapter.id)}
                   >
                     <button
                       className={`chapter-link ${chapter.id === props.chapter?.id ? 'active' : ''}`}
@@ -581,6 +609,40 @@ export function WorkspacePage(props: WorkspacePageProps) {
             }}
           >
             删除卷
+          </button>
+        </div>
+      )}
+      {chapterMenu && (
+        <div
+          className="context-menu"
+          style={{ left: chapterMenu.x, top: chapterMenu.y }}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button
+            onClick={() => {
+              const chapter = projectChapters.find((item) => item.id === chapterMenu.chapterId)
+              if (chapter) renameChapter(chapter)
+              setChapterMenu(undefined)
+            }}
+          >
+            重命名章节
+          </button>
+          <button
+            onClick={() => {
+              props.onSelectChapter(chapterMenu.chapterId)
+              setChapterMenu(undefined)
+            }}
+          >
+            打开章节
+          </button>
+          <button
+            className="danger-menu-item"
+            onClick={() => {
+              deleteChapter(chapterMenu.chapterId)
+              setChapterMenu(undefined)
+            }}
+          >
+            删除章节
           </button>
         </div>
       )}

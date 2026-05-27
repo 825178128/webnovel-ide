@@ -3,7 +3,7 @@ import { Icon } from './Icon'
 import { aiTaskLabels, chapterStatusLabels } from '../constants/labels'
 import { buildMockAIResult } from '../services/aiMock'
 import { toggleChapterCharacter, toggleChapterSetting } from '../services/stateRelations'
-import type { AITaskType, Chapter, Character, Project, Setting, WebnovelIDEState } from '../types'
+import type { AITaskType, Chapter, ChapterStatus, Character, Project, Setting, WebnovelIDEState } from '../types'
 import { countWords, createId, nowIso } from '../utils'
 
 export function ContextPanel(props: {
@@ -82,15 +82,50 @@ export function ContextPanel(props: {
     }))
   }
 
+  function updateChapter(patch: Partial<Chapter>) {
+    if (!props.chapter) return
+    props.onPatchState((current) => ({
+      ...current,
+      chapters: current.chapters.map((chapter) =>
+        chapter.id === props.chapter?.id ? { ...chapter, ...patch, updatedAt: nowIso() } : chapter,
+      ),
+    }))
+  }
+
   return (
     <aside className="context-panel">
       <section>
         <h2>当前章节</h2>
         {props.chapter ? (
-          <div className="context-card">
-            <strong>{props.chapter.title}</strong>
-            <span>{chapterStatusLabels[props.chapter.status]}</span>
-            <p>{props.chapter.goal || '暂无本章目标'}</p>
+          <div className="context-card chapter-inspector">
+            <label className="field-block">
+              章节标题
+              <input
+                value={props.chapter.title}
+                onChange={(event) => updateChapter({ title: event.target.value })}
+              />
+            </label>
+            <label className="field-block">
+              状态
+              <select
+                value={props.chapter.status}
+                onChange={(event) => updateChapter({ status: event.target.value as ChapterStatus })}
+              >
+                {Object.entries(chapterStatusLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field-block">
+              本章目标
+              <textarea
+                value={props.chapter.goal ?? ''}
+                onChange={(event) => updateChapter({ goal: event.target.value })}
+                placeholder="这一章要完成的推进、冲突或情绪目标"
+              />
+            </label>
             <small>{props.chapter.summary || '暂无本章摘要'}</small>
           </div>
         ) : (

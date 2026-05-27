@@ -35,18 +35,6 @@ export function ChapterEditor(props: {
 
   return (
     <section className="editor-panel">
-      <input
-        className="chapter-title-input"
-        value={props.chapter.title}
-        onChange={(event) => updateChapter({ title: event.target.value })}
-      />
-      <label className="field-block">
-        本章目标
-        <textarea
-          value={props.chapter.goal ?? ''}
-          onChange={(event) => updateChapter({ goal: event.target.value })}
-        />
-      </label>
       <textarea
         className="chapter-content"
         value={props.chapter.content}
