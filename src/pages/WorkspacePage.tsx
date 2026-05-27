@@ -10,7 +10,7 @@ import {
 } from '../components/dialogs'
 import { ChapterEditor, CharacterEditor, SettingEditor } from '../components/editors'
 import { chapterStatusLabels } from '../constants/labels'
-import { buildBookExport, buildChapterExport, type ExportFormat } from '../services/exportService'
+import { buildBookExport, type ExportFormat } from '../services/exportService'
 import type { Chapter, Character, Project, Setting, Volume, WebnovelIDEState } from '../types'
 import { createId, downloadText, nowIso } from '../utils'
 
@@ -60,6 +60,9 @@ export function WorkspacePage(props: WorkspacePageProps) {
   const [projectSettingsOpen, setProjectSettingsOpen] = useState(false)
   const [createDialog, setCreateDialog] = useState<CreateDialogState>()
   const [assistantCollapsed, setAssistantCollapsed] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [collapsedVolumeIds, setCollapsedVolumeIds] = useState<Set<string>>(() => new Set())
+  const [exportMenuOpen, setExportMenuOpen] = useState(false)
   const [draggingChapterId, setDraggingChapterId] = useState<string>()
   const [volumeMenu, setVolumeMenu] = useState<VolumeMenuState>()
   const [chapterMenu, setChapterMenu] = useState<ChapterMenuState>()
@@ -204,14 +207,28 @@ export function WorkspacePage(props: WorkspacePageProps) {
 
   function openVolumeMenu(event: MouseEvent, volumeId: string) {
     event.preventDefault()
+    setExportMenuOpen(false)
     setVolumeMenu({ volumeId, x: event.clientX, y: event.clientY })
     setChapterMenu(undefined)
   }
 
   function openChapterMenu(event: MouseEvent, chapterId: string) {
     event.preventDefault()
+    setExportMenuOpen(false)
     setChapterMenu({ chapterId, x: event.clientX, y: event.clientY })
     setVolumeMenu(undefined)
+  }
+
+  function toggleVolume(volumeId: string) {
+    setCollapsedVolumeIds((current) => {
+      const next = new Set(current)
+      if (next.has(volumeId)) {
+        next.delete(volumeId)
+      } else {
+        next.add(volumeId)
+      }
+      return next
+    })
   }
 
   function renameChapter(chapter: Chapter) {
@@ -299,21 +316,17 @@ export function WorkspacePage(props: WorkspacePageProps) {
     props.onSetMainView('chapter')
   }
 
-  function exportActiveChapter(format: ExportFormat) {
-    if (!props.chapter) return
-    const content = buildChapterExport(props.chapter, format)
-    downloadText(`${props.project.title}-${props.chapter.title}.${format}`, content)
-  }
-
   function exportBook(format: ExportFormat) {
     const content = buildBookExport(props.project, projectVolumes, projectChapters, format)
     downloadText(`${props.project.title}.${format}`, content)
+    setExportMenuOpen(false)
   }
 
   return (
     <div
-      className={`workspace ${assistantCollapsed ? 'assistant-collapsed' : ''}`}
+      className={`workspace ${assistantCollapsed ? 'assistant-collapsed' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}
       onClick={() => {
+        setExportMenuOpen(false)
         setVolumeMenu(undefined)
         setChapterMenu(undefined)
       }}
@@ -349,6 +362,13 @@ export function WorkspacePage(props: WorkspacePageProps) {
       </header>
 
       <nav className="activity-bar" aria-label="工作台导航">
+        <button
+          className={!sidebarCollapsed ? 'active' : ''}
+          title={sidebarCollapsed ? '展开资源管理器' : '收起资源管理器'}
+          onClick={() => setSidebarCollapsed((value) => !value)}
+        >
+          <Icon name={sidebarCollapsed ? 'panel-right' : 'panel-left'} size={19} />
+        </button>
         <button
           className={props.mainView === 'chapter' ? 'active' : ''}
           title="章节"
@@ -386,6 +406,33 @@ export function WorkspacePage(props: WorkspacePageProps) {
       <aside className="project-sidebar">
         <div className="sidebar-title">
           <span>资源管理器</span>
+          <div className="sidebar-title-actions">
+            <button
+              className={`icon-button ${exportMenuOpen ? 'active' : ''}`}
+              title="导出作品"
+              onClick={(event) => {
+                event.stopPropagation()
+                setExportMenuOpen((value) => !value)
+              }}
+            >
+              <Icon name="download" />
+            </button>
+            <button className="icon-button" title="收起资源管理器" onClick={() => setSidebarCollapsed(true)}>
+              <Icon name="panel-left" />
+            </button>
+          </div>
+          {exportMenuOpen && (
+            <div className="sidebar-export-menu" onClick={(event) => event.stopPropagation()}>
+              <button className="button-with-icon" onClick={() => exportBook('txt')}>
+                <Icon name="file" />
+                <span>导出 TXT</span>
+              </button>
+              <button className="button-with-icon" onClick={() => exportBook('md')}>
+                <Icon name="file" />
+                <span>导出 Markdown</span>
+              </button>
+            </div>
+          )}
         </div>
         <section>
           <div className="sidebar-heading">
@@ -399,9 +446,16 @@ export function WorkspacePage(props: WorkspacePageProps) {
             </button>
           </div>
           {projectVolumes.map((volume) => (
-            <div className="volume-block" key={volume.id}>
-              <div className="volume-title" onContextMenu={(event) => openVolumeMenu(event, volume.id)}>
-                <span>{volume.title}</span>
+            <div className={`volume-block ${collapsedVolumeIds.has(volume.id) ? 'collapsed' : ''}`} key={volume.id}>
+              <div
+                className="volume-title"
+                onClick={() => toggleVolume(volume.id)}
+                onContextMenu={(event) => openVolumeMenu(event, volume.id)}
+              >
+                <span className="volume-name">
+                  <Icon name="arrow-down" size={13} />
+                  <span>{volume.title}</span>
+                </span>
                 <div className="inline-actions">
                   <button
                     className="icon-button"
@@ -415,32 +469,37 @@ export function WorkspacePage(props: WorkspacePageProps) {
                   </button>
                 </div>
               </div>
-              {projectChapters
-                .filter((chapter) => chapter.volumeId === volume.id)
-                .map((chapter) => (
-                  <div
-                    className={`chapter-row ${draggingChapterId === chapter.id ? 'dragging' : ''}`}
-                    draggable
-                    key={chapter.id}
-                    onDragEnd={() => setDraggingChapterId(undefined)}
-                    onDragOver={(event) => event.preventDefault()}
-                    onDragStart={(event) => handleChapterDragStart(event, chapter.id)}
-                    onDrop={(event) => {
-                      event.preventDefault()
-                      reorderChapter(draggingChapterId, chapter.id)
-                      setDraggingChapterId(undefined)
-                    }}
-                    onContextMenu={(event) => openChapterMenu(event, chapter.id)}
-                  >
-                    <button
-                      className={`chapter-link ${chapter.id === props.chapter?.id ? 'active' : ''}`}
-                      onClick={() => props.onSelectChapter(chapter.id)}
-                    >
-                      <span>{chapter.title}</span>
-                      <small>{chapterStatusLabels[chapter.status]}</small>
-                    </button>
-                  </div>
-                ))}
+              {!collapsedVolumeIds.has(volume.id) && (
+                <div className="chapter-list-scroll">
+                  {projectChapters
+                    .filter((chapter) => chapter.volumeId === volume.id)
+                    .sort((a, b) => b.order - a.order)
+                    .map((chapter) => (
+                      <div
+                        className={`chapter-row ${draggingChapterId === chapter.id ? 'dragging' : ''}`}
+                        draggable
+                        key={chapter.id}
+                        onDragEnd={() => setDraggingChapterId(undefined)}
+                        onDragOver={(event) => event.preventDefault()}
+                        onDragStart={(event) => handleChapterDragStart(event, chapter.id)}
+                        onDrop={(event) => {
+                          event.preventDefault()
+                          reorderChapter(draggingChapterId, chapter.id)
+                          setDraggingChapterId(undefined)
+                        }}
+                        onContextMenu={(event) => openChapterMenu(event, chapter.id)}
+                      >
+                        <button
+                          className={`chapter-link ${chapter.id === props.chapter?.id ? 'active' : ''}`}
+                          onClick={() => props.onSelectChapter(chapter.id)}
+                        >
+                          <span>{chapter.title}</span>
+                          <small>{chapterStatusLabels[chapter.status]}</small>
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
           ))}
         </section>
@@ -487,24 +546,6 @@ export function WorkspacePage(props: WorkspacePageProps) {
           ))}
         </section>
 
-        <section className="sidebar-export">
-          <div className="sidebar-heading">
-            <h2>
-              <Icon name="download" />
-              <span>导出</span>
-            </h2>
-          </div>
-          <div className="export-actions">
-            <button className="button-with-icon" onClick={() => exportBook('txt')}>
-              <Icon name="file" />
-              <span>TXT</span>
-            </button>
-            <button className="button-with-icon" onClick={() => exportBook('md')}>
-              <Icon name="file" />
-              <span>Markdown</span>
-            </button>
-          </div>
-        </section>
       </aside>
 
       <main className="main-panel">
