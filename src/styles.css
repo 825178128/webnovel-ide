@@ -867,6 +867,14 @@ textarea {
   padding: 8px 10px;
 }
 
+.sidebar-menu-title {
+  color: var(--sidebar-muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 4px 8px 5px;
+}
+
 .context-panel {
   grid-column: 4;
   grid-row: 2 / 3;
@@ -933,6 +941,16 @@ textarea {
   margin-bottom: 0;
 }
 
+.sidebar-section {
+  border-bottom: 1px solid color-mix(in srgb, var(--sidebar-border) 72%, transparent);
+  padding-bottom: 14px;
+}
+
+.sidebar-section:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
 .sidebar-heading,
 .volume-title {
   display: flex;
@@ -955,6 +973,20 @@ textarea {
 
 .sidebar-heading h2 {
   color: var(--sidebar-muted);
+}
+
+.sidebar-heading h2 strong {
+  display: inline-flex;
+  min-width: 20px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 999px;
+  color: var(--sidebar-muted);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 0 6px;
 }
 
 .context-panel h2 {
@@ -1048,6 +1080,13 @@ textarea {
   gap: 4px;
 }
 
+.inline-actions small {
+  color: var(--sidebar-muted);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .inline-actions button {
   padding: 0;
   white-space: nowrap;
@@ -1061,6 +1100,12 @@ textarea {
 
 .chapter-row.dragging {
   opacity: 0.45;
+}
+
+.chapter-row.drop-target .chapter-link {
+  border-color: color-mix(in srgb, var(--brand) 48%, var(--border));
+  background: color-mix(in srgb, var(--brand-soft) 78%, transparent);
+  box-shadow: inset 3px 0 0 var(--brand);
 }
 
 .chapter-row:active {
@@ -1094,6 +1139,38 @@ textarea {
 
 .chapter-link small {
   color: var(--sidebar-muted);
+}
+
+.sidebar-empty,
+.sidebar-empty-action,
+.chapter-empty-action {
+  border: 1px dashed var(--sidebar-border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--sidebar-active) 42%, transparent);
+  color: var(--sidebar-muted);
+}
+
+.sidebar-empty {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.sidebar-empty > span {
+  color: var(--sidebar-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.sidebar-empty-action,
+.chapter-empty-action {
+  justify-content: flex-start;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.chapter-empty-action {
+  width: 100%;
 }
 
 .main-panel {

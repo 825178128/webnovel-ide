@@ -62,6 +62,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
   const [collapsedVolumeIds, setCollapsedVolumeIds] = useState<Set<string>>(() => new Set())
   const [exportMenuOpen, setExportMenuOpen] = useState(false)
   const [draggingChapterId, setDraggingChapterId] = useState<string>()
+  const [dragOverChapterId, setDragOverChapterId] = useState<string>()
   const [volumeMenu, setVolumeMenu] = useState<VolumeMenuState>()
   const [chapterMenu, setChapterMenu] = useState<ChapterMenuState>()
   const activeChapterRowRef = useRef<HTMLDivElement | null>(null)
@@ -281,6 +282,10 @@ export function WorkspacePage(props: WorkspacePageProps) {
     setDraggingChapterId(chapterId)
   }
 
+  function volumeChapters(volumeId: string) {
+    return projectChapters.filter((chapter) => chapter.volumeId === volumeId)
+  }
+
   function deleteChapter(chapterId: string) {
     const chapter = projectChapters.find((item) => item.id === chapterId)
     if (!chapter || !window.confirm(`确定删除章节「${chapter.title}」吗？`)) return
@@ -423,127 +428,182 @@ export function WorkspacePage(props: WorkspacePageProps) {
           </div>
           {exportMenuOpen && (
             <div className="sidebar-export-menu" onClick={(event) => event.stopPropagation()}>
+              <div className="sidebar-menu-title">导出整本作品</div>
               <button className="button-with-icon" onClick={() => exportBook('txt')}>
                 <Icon name="file" />
-                <span>导出 TXT</span>
+                <span>TXT 文本</span>
               </button>
               <button className="button-with-icon" onClick={() => exportBook('md')}>
                 <Icon name="file" />
-                <span>导出 Markdown</span>
+                <span>Markdown</span>
               </button>
             </div>
           )}
         </div>
-        <section>
+        <section className="sidebar-section">
           <div className="sidebar-heading">
             <h2>
               <Icon name="book" />
               <span>章节</span>
+              <strong>{projectChapters.length}</strong>
             </h2>
             <button className="button-with-icon" onClick={() => setCreateDialog({ type: 'volume' })}>
               <Icon name="plus" />
               <span>新卷</span>
             </button>
           </div>
-          {projectVolumes.map((volume) => (
-            <div className={`volume-block ${collapsedVolumeIds.has(volume.id) ? 'collapsed' : ''}`} key={volume.id}>
-              <div
-                className="volume-title"
-                onClick={() => toggleVolume(volume.id)}
-                onContextMenu={(event) => openVolumeMenu(event, volume.id)}
-              >
-                <span className="volume-name">
-                  <Icon name="arrow-down" size={13} />
-                  <span>{volume.title}</span>
-                </span>
-                <div className="inline-actions">
-                  <button
-                    className="icon-button"
-                    title="新建章节"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      setCreateDialog({ type: 'chapter', volumeId: volume.id })
-                    }}
-                  >
-                    <Icon name="plus" />
-                  </button>
-                </div>
-              </div>
-              {!collapsedVolumeIds.has(volume.id) && (
-                <div className="chapter-list-scroll">
-                  {projectChapters
-                    .filter((chapter) => chapter.volumeId === volume.id)
-                    .map((chapter) => (
-                      <div
-                        className={`chapter-row ${draggingChapterId === chapter.id ? 'dragging' : ''}`}
-                        draggable
-                        key={chapter.id}
-                        ref={chapter.id === props.chapter?.id ? activeChapterRowRef : undefined}
-                        onDragEnd={() => setDraggingChapterId(undefined)}
-                        onDragOver={(event) => event.preventDefault()}
-                        onDragStart={(event) => handleChapterDragStart(event, chapter.id)}
-                        onDrop={(event) => {
-                          event.preventDefault()
-                          reorderChapter(draggingChapterId, chapter.id)
-                          setDraggingChapterId(undefined)
-                        }}
-                        onContextMenu={(event) => openChapterMenu(event, chapter.id)}
-                      >
-                        <button
-                          className={`chapter-link ${chapter.id === props.chapter?.id ? 'active' : ''}`}
-                          onClick={() => props.onSelectChapter(chapter.id)}
-                        >
-                          <span>{chapter.title}</span>
-                          <small>{chapterStatusLabels[chapter.status]}</small>
-                        </button>
-                      </div>
-                    ))}
-                </div>
-              )}
+          {projectVolumes.length === 0 ? (
+            <div className="sidebar-empty">
+              <span>还没有卷</span>
+              <button className="button-with-icon" onClick={() => setCreateDialog({ type: 'volume' })}>
+                <Icon name="plus" />
+                <span>新建第一卷</span>
+              </button>
             </div>
-          ))}
+          ) : (
+            projectVolumes.map((volume) => {
+              const chaptersInVolume = volumeChapters(volume.id)
+
+              return (
+                <div className={`volume-block ${collapsedVolumeIds.has(volume.id) ? 'collapsed' : ''}`} key={volume.id}>
+                  <div
+                    className="volume-title"
+                    title="点击折叠或展开"
+                    onClick={() => toggleVolume(volume.id)}
+                    onContextMenu={(event) => openVolumeMenu(event, volume.id)}
+                  >
+                    <span className="volume-name">
+                      <Icon name="arrow-down" size={13} />
+                      <span>{volume.title}</span>
+                    </span>
+                    <div className="inline-actions">
+                      <small>{chaptersInVolume.length} 章</small>
+                      <button
+                        className="icon-button"
+                        title="新建章节"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          setCreateDialog({ type: 'chapter', volumeId: volume.id })
+                        }}
+                      >
+                        <Icon name="plus" />
+                      </button>
+                    </div>
+                  </div>
+                  {!collapsedVolumeIds.has(volume.id) && (
+                    <div className="chapter-list-scroll">
+                      {chaptersInVolume.length === 0 && (
+                        <button
+                          className="chapter-empty-action"
+                          onClick={() => setCreateDialog({ type: 'chapter', volumeId: volume.id })}
+                        >
+                          <Icon name="plus" />
+                          <span>添加本卷第一章</span>
+                        </button>
+                      )}
+                      {chaptersInVolume.map((chapter) => (
+                        <div
+                          className={`chapter-row ${draggingChapterId === chapter.id ? 'dragging' : ''} ${dragOverChapterId === chapter.id ? 'drop-target' : ''}`}
+                          draggable
+                          key={chapter.id}
+                          ref={chapter.id === props.chapter?.id ? activeChapterRowRef : undefined}
+                          onDragEnd={() => {
+                            setDraggingChapterId(undefined)
+                            setDragOverChapterId(undefined)
+                          }}
+                          onDragEnter={() => {
+                            if (draggingChapterId && draggingChapterId !== chapter.id) {
+                              setDragOverChapterId(chapter.id)
+                            }
+                          }}
+                          onDragOver={(event) => {
+                            event.preventDefault()
+                            if (draggingChapterId && draggingChapterId !== chapter.id) {
+                              setDragOverChapterId(chapter.id)
+                            }
+                          }}
+                          onDragStart={(event) => handleChapterDragStart(event, chapter.id)}
+                          onDrop={(event) => {
+                            event.preventDefault()
+                            reorderChapter(draggingChapterId, chapter.id)
+                            setDraggingChapterId(undefined)
+                            setDragOverChapterId(undefined)
+                          }}
+                          onContextMenu={(event) => openChapterMenu(event, chapter.id)}
+                        >
+                          <button
+                            className={`chapter-link ${chapter.id === props.chapter?.id ? 'active' : ''}`}
+                            onClick={() => props.onSelectChapter(chapter.id)}
+                          >
+                            <span>{chapter.title}</span>
+                            <small>{chapterStatusLabels[chapter.status]}</small>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })
+          )}
         </section>
 
-        <section>
+        <section className="sidebar-section">
           <div className="sidebar-heading">
             <h2>
               <Icon name="users" />
               <span>人物</span>
+              <strong>{projectCharacters.length}</strong>
             </h2>
             <button className="icon-button" title="新建人物" onClick={() => setCreateDialog({ type: 'character' })}>
               <Icon name="plus" />
             </button>
           </div>
-          {projectCharacters.map((character) => (
-            <button
-              className={`plain-list-item ${character.id === selectedCharacter?.id ? 'active' : ''}`}
-              key={character.id}
-              onClick={() => props.onSelectCharacter(character.id)}
-            >
-              {character.name}
+          {projectCharacters.length === 0 ? (
+            <button className="sidebar-empty-action" onClick={() => setCreateDialog({ type: 'character' })}>
+              <Icon name="plus" />
+              <span>添加主要人物</span>
             </button>
-          ))}
+          ) : (
+            projectCharacters.map((character) => (
+              <button
+                className={`plain-list-item ${character.id === selectedCharacter?.id ? 'active' : ''}`}
+                key={character.id}
+                onClick={() => props.onSelectCharacter(character.id)}
+              >
+                {character.name}
+              </button>
+            ))
+          )}
         </section>
 
-        <section>
+        <section className="sidebar-section">
           <div className="sidebar-heading">
             <h2>
               <Icon name="database" />
               <span>设定</span>
+              <strong>{projectSettings.length}</strong>
             </h2>
             <button className="icon-button" title="新建设定" onClick={() => setCreateDialog({ type: 'setting' })}>
               <Icon name="plus" />
             </button>
           </div>
-          {projectSettings.map((setting) => (
-            <button
-              className={`plain-list-item ${setting.id === selectedSetting?.id ? 'active' : ''}`}
-              key={setting.id}
-              onClick={() => props.onSelectSetting(setting.id)}
-            >
-              {setting.title}
+          {projectSettings.length === 0 ? (
+            <button className="sidebar-empty-action" onClick={() => setCreateDialog({ type: 'setting' })}>
+              <Icon name="plus" />
+              <span>添加世界设定</span>
             </button>
-          ))}
+          ) : (
+            projectSettings.map((setting) => (
+              <button
+                className={`plain-list-item ${setting.id === selectedSetting?.id ? 'active' : ''}`}
+                key={setting.id}
+                onClick={() => props.onSelectSetting(setting.id)}
+              >
+                {setting.title}
+              </button>
+            ))
+          )}
         </section>
 
       </aside>
