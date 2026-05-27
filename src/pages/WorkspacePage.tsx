@@ -1,4 +1,4 @@
-import { useState, type DragEvent, type MouseEvent } from 'react'
+import { useEffect, useRef, useState, type DragEvent, type MouseEvent } from 'react'
 import { ContextPanel } from '../components/ContextPanel'
 import { Icon } from '../components/Icon'
 import {
@@ -66,6 +66,11 @@ export function WorkspacePage(props: WorkspacePageProps) {
   const [draggingChapterId, setDraggingChapterId] = useState<string>()
   const [volumeMenu, setVolumeMenu] = useState<VolumeMenuState>()
   const [chapterMenu, setChapterMenu] = useState<ChapterMenuState>()
+  const activeChapterRowRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    activeChapterRowRef.current?.scrollIntoView({ block: 'end' })
+  }, [props.chapter?.id, collapsedVolumeIds])
 
   function createVolume(form: Pick<Volume, 'title' | 'summary'>) {
     const timestamp = nowIso()
@@ -336,21 +341,21 @@ export function WorkspacePage(props: WorkspacePageProps) {
           <button className="topbar-back" aria-label="返回作品列表" title="返回作品列表" onClick={props.onBack}>
             <Icon name="arrow-left" />
           </button>
+          {sidebarCollapsed && (
+            <button
+              className="topbar-sidebar-toggle"
+              title="展开资源管理器"
+              onClick={() => setSidebarCollapsed(false)}
+            >
+              <Icon name="panel-right" />
+            </button>
+          )}
           <div className="workspace-title">
             <strong>{props.project.title}</strong>
             <span>作品工作台</span>
           </div>
         </div>
-        <div className="workspace-context">
-          <Icon name={props.mainView === 'chapter' ? 'book' : props.mainView === 'character' ? 'users' : 'database'} />
-          <span>
-            {props.mainView === 'chapter'
-              ? '章节编辑'
-              : props.mainView === 'character'
-                ? '人物卡'
-                : '设定卡'}
-          </span>
-        </div>
+        <div className="workspace-topbar-spacer" />
         <div className="topbar-meta">
           <div className="toolbar-group">
             <button className="button-with-icon" onClick={() => setAssistantCollapsed((value) => !value)}>
@@ -362,13 +367,6 @@ export function WorkspacePage(props: WorkspacePageProps) {
       </header>
 
       <nav className="activity-bar" aria-label="工作台导航">
-        <button
-          className={!sidebarCollapsed ? 'active' : ''}
-          title={sidebarCollapsed ? '展开资源管理器' : '收起资源管理器'}
-          onClick={() => setSidebarCollapsed((value) => !value)}
-        >
-          <Icon name={sidebarCollapsed ? 'panel-right' : 'panel-left'} size={19} />
-        </button>
         <button
           className={props.mainView === 'chapter' ? 'active' : ''}
           title="章节"
@@ -473,12 +471,13 @@ export function WorkspacePage(props: WorkspacePageProps) {
                 <div className="chapter-list-scroll">
                   {projectChapters
                     .filter((chapter) => chapter.volumeId === volume.id)
-                    .sort((a, b) => b.order - a.order)
+                    .sort((a, b) => a.order - b.order)
                     .map((chapter) => (
                       <div
                         className={`chapter-row ${draggingChapterId === chapter.id ? 'dragging' : ''}`}
                         draggable
                         key={chapter.id}
+                        ref={chapter.id === props.chapter?.id ? activeChapterRowRef : undefined}
                         onDragEnd={() => setDraggingChapterId(undefined)}
                         onDragOver={(event) => event.preventDefault()}
                         onDragStart={(event) => handleChapterDragStart(event, chapter.id)}

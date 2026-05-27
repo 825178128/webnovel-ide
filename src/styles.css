@@ -703,25 +703,8 @@ textarea {
   font-size: 11px;
 }
 
-.workspace-context {
-  display: flex;
-  min-width: 0;
+.workspace-topbar-spacer {
   flex: 1;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  color: var(--muted-strong);
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.workspace-context span {
-  overflow: hidden;
-  max-width: min(520px, 42vw);
-  color: var(--text);
-  font-size: 13px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .topbar-meta {
@@ -732,6 +715,20 @@ textarea {
   gap: 9px !important;
   overflow-x: auto;
   white-space: nowrap;
+}
+
+.topbar-sidebar-toggle {
+  width: 32px;
+  height: 32px;
+  border-color: var(--chrome-border);
+  background: var(--chrome-bg-2);
+  color: var(--muted-strong);
+  padding: 0;
+}
+
+.topbar-sidebar-toggle:hover:not(:disabled) {
+  background: var(--sidebar-active);
+  color: var(--text);
 }
 
 .toolbar-group {
@@ -1030,9 +1027,10 @@ textarea {
 .chapter-list-scroll {
   display: grid;
   gap: 7px;
-  max-height: 164px;
+  max-height: 170px;
   overflow-y: auto;
   padding-right: 2px;
+  scroll-behavior: smooth;
 }
 
 .chapter-list-scroll::-webkit-scrollbar {
