@@ -257,7 +257,8 @@ textarea {
 
 .app-surface {
   min-height: 100vh;
-  padding: 28px;
+  background: var(--main-bg);
+  padding: 26px;
 }
 
 .page-frame {
@@ -272,8 +273,9 @@ textarea {
   align-items: center;
   justify-content: space-between;
   max-width: var(--page-max);
-  margin: 0 auto 18px;
-  padding: 18px;
+  margin: 0 auto 16px;
+  border-bottom: 1px solid var(--border);
+  padding: 0 0 18px;
 }
 
 .projects-heading {
@@ -285,7 +287,7 @@ textarea {
 
 .projects-header h1 {
   margin: 0;
-  font-size: 30px;
+  font-size: 28px;
   letter-spacing: 0;
 }
 
@@ -309,6 +311,11 @@ textarea {
   padding: 3px 9px;
 }
 
+.projects-overview strong {
+  color: var(--text);
+  font-size: 13px;
+}
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -324,10 +331,32 @@ textarea {
   text-transform: uppercase;
 }
 
-.empty-state,
-.project-grid {
+.projects-main {
   max-width: var(--page-max);
   margin: 0 auto;
+}
+
+.projects-main-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.projects-main-header h2,
+.projects-main-header p {
+  margin: 0;
+}
+
+.projects-main-header h2 {
+  font-size: 15px;
+}
+
+.projects-main-header p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .empty-state {
@@ -335,7 +364,11 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  padding: 26px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  padding: 28px;
 }
 
 .empty-state h2,
@@ -354,23 +387,23 @@ textarea {
 
 .project-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 14px;
 }
 
 .project-card {
   display: grid;
-  gap: 16px;
+  gap: 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface);
-  box-shadow: var(--shadow-soft);
+  box-shadow: none;
   padding: 18px;
 }
 
 .project-card:hover {
   border-color: var(--border-strong);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-soft);
 }
 
 .project-card-header {
@@ -387,14 +420,22 @@ textarea {
 }
 
 .project-card h2 {
+  overflow: hidden;
   font-size: 18px;
   line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .project-card p {
+  display: -webkit-box;
+  min-height: 52px;
+  overflow: hidden;
   margin-top: 8px;
   color: var(--muted);
   line-height: 1.65;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .project-stats {
@@ -407,7 +448,7 @@ textarea {
 .project-stats div {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--surface-muted);
+  background: color-mix(in srgb, var(--surface-muted) 78%, transparent);
   padding: 10px;
 }
 
@@ -417,16 +458,28 @@ textarea {
 }
 
 .project-card dd {
+  overflow: hidden;
   margin: 2px 0 0;
   font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--border);
   color: var(--muted);
   font-size: 13px;
+  padding-top: 12px;
+}
+
+.card-footer > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dialog-backdrop {
