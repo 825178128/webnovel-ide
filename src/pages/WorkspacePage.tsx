@@ -298,17 +298,17 @@ export function WorkspacePage(props: WorkspacePageProps) {
           </button>
           <div className="workspace-title">
             <strong>{props.project.title}</strong>
-            <span>{props.project.genre || props.project.targetPlatform || '本地作品'}</span>
+            <span>作品工作台</span>
           </div>
         </div>
         <div className="workspace-context">
-          <Icon name={props.mainView === 'chapter' ? 'file' : props.mainView === 'character' ? 'users' : 'database'} />
+          <Icon name={props.mainView === 'chapter' ? 'book' : props.mainView === 'character' ? 'users' : 'database'} />
           <span>
             {props.mainView === 'chapter'
-              ? props.chapter?.title || '未选择章节'
+              ? '章节编辑'
               : props.mainView === 'character'
-                ? selectedCharacter?.name || '人物'
-                : selectedSetting?.title || '设定'}
+                ? '人物卡'
+                : '设定卡'}
           </span>
         </div>
         <div className="topbar-meta">
@@ -364,7 +364,6 @@ export function WorkspacePage(props: WorkspacePageProps) {
       <aside className="project-sidebar">
         <div className="sidebar-title">
           <span>资源管理器</span>
-          <strong>{props.project.title}</strong>
         </div>
         <section>
           <div className="sidebar-heading">
@@ -486,18 +485,6 @@ export function WorkspacePage(props: WorkspacePageProps) {
       </aside>
 
       <main className="main-panel">
-        <div className="editor-tabs">
-          <button className="active">
-            <Icon name={props.mainView === 'chapter' ? 'file' : props.mainView === 'character' ? 'users' : 'database'} />
-            <span>
-              {props.mainView === 'chapter'
-                ? props.chapter?.title || '未选择章节'
-                : props.mainView === 'character'
-                  ? selectedCharacter?.name || '人物'
-                  : selectedSetting?.title || '设定'}
-            </span>
-          </button>
-        </div>
         {props.mainView === 'chapter' && props.chapter && (
           <ChapterEditor
             chapter={props.chapter}
