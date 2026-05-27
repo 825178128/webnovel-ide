@@ -612,7 +612,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
 
       </aside>
 
-      <main className="main-panel">
+      <main className={`main-panel main-panel-${props.mainView}`}>
         {props.mainView === 'chapter' && props.chapter && (
           <ChapterEditor
             chapter={props.chapter}
