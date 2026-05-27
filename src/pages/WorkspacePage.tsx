@@ -555,9 +555,11 @@ export function WorkspacePage(props: WorkspacePageProps) {
               <span>人物</span>
               <strong>{projectCharacters.length}</strong>
             </h2>
-            <button className="icon-button" title="新建人物" onClick={() => setCreateDialog({ type: 'character' })}>
-              <Icon name="plus" />
-            </button>
+            {projectCharacters.length > 0 && (
+              <button className="icon-button" title="新建人物" onClick={() => setCreateDialog({ type: 'character' })}>
+                <Icon name="plus" />
+              </button>
+            )}
           </div>
           {projectCharacters.length === 0 ? (
             <button className="sidebar-empty-action" onClick={() => setCreateDialog({ type: 'character' })}>
@@ -581,17 +583,19 @@ export function WorkspacePage(props: WorkspacePageProps) {
           <div className="sidebar-heading">
             <h2>
               <Icon name="database" />
-              <span>设定</span>
+              <span>资料库</span>
               <strong>{projectSettings.length}</strong>
             </h2>
-            <button className="icon-button" title="新建设定" onClick={() => setCreateDialog({ type: 'setting' })}>
-              <Icon name="plus" />
-            </button>
+            {projectSettings.length > 0 && (
+              <button className="icon-button" title="新增资料" onClick={() => setCreateDialog({ type: 'setting' })}>
+                <Icon name="plus" />
+              </button>
+            )}
           </div>
           {projectSettings.length === 0 ? (
             <button className="sidebar-empty-action" onClick={() => setCreateDialog({ type: 'setting' })}>
               <Icon name="plus" />
-              <span>添加世界设定</span>
+              <span>添加设定资料</span>
             </button>
           ) : (
             projectSettings.map((setting) => (
@@ -636,6 +640,9 @@ export function WorkspacePage(props: WorkspacePageProps) {
           state={props.state}
           project={props.project}
           chapter={props.chapter}
+          mainView={props.mainView}
+          character={selectedCharacter}
+          setting={selectedSetting}
           characters={projectCharacters}
           settings={projectSettings}
           onPatchState={props.onPatchState}

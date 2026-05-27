@@ -1286,6 +1286,29 @@ textarea {
   font-size: 22px;
 }
 
+.form-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.form-panel-header > div {
+  display: grid;
+  gap: 6px;
+}
+
+.form-panel-header span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.form-panel-header h1 {
+  font-size: 24px;
+}
+
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -1318,6 +1341,14 @@ textarea {
 
 .chapter-inspector textarea {
   min-height: 96px;
+}
+
+.entity-inspector strong {
+  color: var(--text);
+}
+
+.entity-inspector p {
+  color: var(--muted-strong);
 }
 
 .relation-list {

@@ -7,11 +7,15 @@ import type { AITaskType, Chapter, ChapterStatus, Character, Project, Setting, W
 import { countWords, createId, nowIso } from '../utils'
 
 type ContextPanelTab = 'properties' | 'context' | 'ai'
+type ContextPanelView = 'chapter' | 'character' | 'setting'
 
 export function ContextPanel(props: {
   state: WebnovelIDEState
   project: Project
+  mainView: ContextPanelView
   chapter?: Chapter
+  character?: Character
+  setting?: Setting
   characters: Character[]
   settings: Setting[]
   onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
@@ -95,6 +99,15 @@ export function ContextPanel(props: {
     }))
   }
 
+  const assistantTitle =
+    props.mainView === 'chapter' ? '章节助手' : props.mainView === 'character' ? '人物助手' : '资料助手'
+  const assistantDescription =
+    props.mainView === 'chapter'
+      ? '基于当前章节和上下文生成辅助内容'
+      : props.mainView === 'character'
+        ? '人物视图下保留后续角色分析、口吻检查和关系建议入口'
+        : '资料视图下保留后续设定一致性、规则冲突和补全建议入口'
+
   return (
     <aside className="context-panel">
       <div className="context-tabs" role="tablist" aria-label="右侧面板">
@@ -127,8 +140,12 @@ export function ContextPanel(props: {
       <div className="context-panel-body">
         {activeTab === 'properties' && (
           <section>
-            <h2>当前章节</h2>
-            {props.chapter ? (
+            <h2>
+              {props.mainView === 'chapter' && '当前章节'}
+              {props.mainView === 'character' && '当前人物'}
+              {props.mainView === 'setting' && '当前资料'}
+            </h2>
+            {props.mainView === 'chapter' && props.chapter ? (
               <div className="context-card chapter-inspector">
                 <label className="field-block">
                   章节标题
@@ -161,38 +178,66 @@ export function ContextPanel(props: {
                 <small>{props.chapter.summary || '暂无本章摘要'}</small>
               </div>
             ) : (
-              <p className="muted">未选择章节</p>
+              <>
+                {props.mainView === 'chapter' && <p className="muted">未选择章节</p>}
+                {props.mainView === 'character' && (
+                  <div className="context-card entity-inspector">
+                    <strong>{props.character?.name ?? '未选择人物'}</strong>
+                    <p>{props.character?.role || '尚未填写身份'}</p>
+                    <small>{props.character?.faction || '暂无阵营/势力'}</small>
+                  </div>
+                )}
+                {props.mainView === 'setting' && (
+                  <div className="context-card entity-inspector">
+                    <strong>{props.setting?.title ?? '未选择资料'}</strong>
+                    <p>{props.setting?.content || '尚未填写资料内容'}</p>
+                    <small>资料详情在主编辑区维护</small>
+                  </div>
+                )}
+              </>
             )}
           </section>
         )}
 
         {activeTab === 'context' && (
           <>
-            <section>
-              <h2>相关人物</h2>
-              <RelationPicker
-                items={props.characters}
-                activeIds={relatedCharacters.map((character) => character.id)}
-                getLabel={(character) => character.name}
-                onToggle={(characterId) => {
-                  if (!props.chapter) return
-                  props.onPatchState((current) => toggleChapterCharacter(current, props.chapter!.id, characterId))
-                }}
-              />
-            </section>
+            {props.mainView === 'chapter' ? (
+              <>
+                <section>
+                  <h2>相关人物</h2>
+                  <RelationPicker
+                    items={props.characters}
+                    activeIds={relatedCharacters.map((character) => character.id)}
+                    getLabel={(character) => character.name}
+                    onToggle={(characterId) => {
+                      if (!props.chapter) return
+                      props.onPatchState((current) => toggleChapterCharacter(current, props.chapter!.id, characterId))
+                    }}
+                  />
+                </section>
 
-            <section>
-              <h2>相关设定</h2>
-              <RelationPicker
-                items={props.settings}
-                activeIds={relatedSettings.map((setting) => setting.id)}
-                getLabel={(setting) => setting.title}
-                onToggle={(settingId) => {
-                  if (!props.chapter) return
-                  props.onPatchState((current) => toggleChapterSetting(current, props.chapter!.id, settingId))
-                }}
-              />
-            </section>
+                <section>
+                  <h2>相关资料</h2>
+                  <RelationPicker
+                    items={props.settings}
+                    activeIds={relatedSettings.map((setting) => setting.id)}
+                    getLabel={(setting) => setting.title}
+                    onToggle={(settingId) => {
+                      if (!props.chapter) return
+                      props.onPatchState((current) => toggleChapterSetting(current, props.chapter!.id, settingId))
+                    }}
+                  />
+                </section>
+              </>
+            ) : (
+              <section>
+                <h2>上下文</h2>
+                <div className="context-card entity-inspector">
+                  <strong>后续联动入口</strong>
+                  <p>这里会承载角色关系、出场章节、设定引用和一致性检查。</p>
+                </div>
+              </section>
+            )}
           </>
         )}
 
@@ -202,9 +247,9 @@ export function ContextPanel(props: {
               <div>
                 <h2>
                   <Icon name="sparkles" />
-                  <span>AI 助手</span>
+                  <span>{assistantTitle}</span>
                 </h2>
-                <p className="muted">当前模型：{props.state.aiConfig?.model ?? 'local-prototype'}</p>
+                <p className="muted">{assistantDescription}</p>
               </div>
               <span>Copilot</span>
             </div>
@@ -226,14 +271,14 @@ export function ContextPanel(props: {
                 placeholder="补充你的指令..."
               />
             </label>
-            <button className="primary-button" onClick={generateMockAI} disabled={!props.chapter}>
+            <button className="primary-button" onClick={generateMockAI} disabled={props.mainView !== 'chapter' || !props.chapter}>
               <Icon name="sparkles" />
               <span>生成模拟结果</span>
             </button>
             <div className="ai-output-block">
               <div className="ai-output-title">
                 <span>输出</span>
-                <button className="button-with-icon" onClick={insertResult} disabled={!result}>
+                <button className="button-with-icon" onClick={insertResult} disabled={props.mainView !== 'chapter' || !result}>
                   <Icon name="file" />
                   <span>插入正文</span>
                 </button>

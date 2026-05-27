@@ -114,10 +114,14 @@ export function SettingEditor(props: {
   }
 
   return (
-    <FormPanel title="设定卡">
-      <div className="form-actions">
+    <section className="form-panel setting-editor-panel">
+      <div className="form-panel-header">
+        <div>
+          <span>设定资料</span>
+          <h1>{settingCategoryLabels[props.setting.category]}</h1>
+        </div>
         <button className="danger-button" onClick={() => props.onDeleteSetting(props.setting.id)}>
-          删除设定
+          删除资料
         </button>
       </div>
       <TextField label="标题" value={props.setting.title} onChange={(title) => updateSetting({ title })} />
@@ -157,6 +161,6 @@ export function SettingEditor(props: {
         value={props.setting.notes ?? ''}
         onChange={(notes) => updateSetting({ notes })}
       />
-    </FormPanel>
+    </section>
   )
 }
