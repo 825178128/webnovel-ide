@@ -335,7 +335,7 @@ textarea {
   grid-template-columns: 52px 286px minmax(500px, 1fr) 336px;
   grid-template-rows: 46px calc(100vh - 70px) 24px;
   min-height: 100vh;
-  background: #0f1724;
+  background: #101827;
 }
 
 .workspace.assistant-collapsed {
@@ -348,7 +348,7 @@ textarea {
   align-items: center;
   gap: 10px;
   border-bottom: 1px solid #202b3b;
-  background: #111a29;
+  background: #101827;
   color: #d8e2f0;
   padding: 0 10px;
 }
@@ -502,7 +502,7 @@ textarea {
   grid-row: 2 / 3;
   overflow: auto;
   border-right: 1px solid var(--sidebar-border);
-  background: var(--sidebar-bg);
+  background: linear-gradient(180deg, #192437 0%, #141e2f 100%);
   color: #e8eef7;
   padding: 12px;
 }
@@ -538,8 +538,8 @@ textarea {
   align-content: start;
   gap: 14px;
   overflow: auto;
-  border-left: 1px solid #d9e0ea;
-  background: #f8fafc;
+  border-left: 1px solid #27344a;
+  background: #eef3f8;
   padding: 14px;
 }
 
@@ -610,26 +610,37 @@ textarea {
   color: #f6f9fd;
   font-size: 13px;
   font-weight: 800;
+  border-radius: 6px;
+  padding: 3px 2px 3px 6px;
 }
 
-.inline-actions,
-.chapter-row-actions {
+.volume-title:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.inline-actions {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.inline-actions button,
-.chapter-row-actions button {
+.inline-actions button {
   padding: 0;
   white-space: nowrap;
 }
 
 .chapter-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: block;
   align-items: center;
-  gap: 4px;
+  cursor: grab;
+}
+
+.chapter-row.dragging {
+  opacity: 0.45;
+}
+
+.chapter-row:active {
+  cursor: grabbing;
 }
 
 .chapter-link,
@@ -666,7 +677,7 @@ textarea {
   grid-row: 2 / 3;
   overflow: auto;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(239, 243, 248, 0.84)),
+    linear-gradient(180deg, rgba(22, 32, 49, 0.94), rgba(239, 243, 248, 0.96) 92px),
     #eef3f8;
   padding: 0 22px 26px;
 }
@@ -679,8 +690,8 @@ textarea {
   align-items: end;
   height: 43px;
   margin: 0 -22px 22px;
-  border-bottom: 1px solid #d5dde9;
-  background: rgba(239, 243, 248, 0.94);
+  border-bottom: 1px solid #27344a;
+  background: rgba(16, 24, 39, 0.96);
   backdrop-filter: blur(10px);
   padding-left: 18px;
 }
@@ -690,11 +701,11 @@ textarea {
   align-items: center;
   gap: 7px;
   height: 34px;
-  border-color: #d5dde9;
-  border-bottom-color: #ffffff;
+  border-color: #33435c;
+  border-bottom-color: #eef3f8;
   border-radius: 7px 7px 0 0;
-  background: #ffffff;
-  color: #1e293b;
+  background: #eef3f8;
+  color: #172033;
   font-size: 13px;
   font-weight: 700;
   padding: 0 13px;
@@ -719,10 +730,15 @@ textarea {
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+  color: var(--text);
   font-size: 28px;
   font-weight: 800;
   letter-spacing: 0;
   padding: 8px 0 10px;
+}
+
+.chapter-title-input::placeholder {
+  color: var(--muted);
 }
 
 .chapter-title-input:focus {
@@ -736,7 +752,7 @@ textarea {
   flex-wrap: wrap;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.86);
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
   padding: 10px;
 }
@@ -763,6 +779,51 @@ textarea {
   font-size: 17px;
   line-height: 1.95;
   padding: 22px;
+}
+
+.sidebar-export {
+  border-top: 1px solid #253247;
+  padding-top: 14px;
+}
+
+.export-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.export-actions button {
+  justify-content: center;
+}
+
+.context-menu {
+  position: fixed;
+  z-index: 30;
+  display: grid;
+  min-width: 160px;
+  border: 1px solid #2f3d55;
+  border-radius: 7px;
+  background: #111a29;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+  padding: 6px;
+}
+
+.context-menu button {
+  justify-content: flex-start;
+  border-color: transparent;
+  background: transparent;
+  color: #dbe5f2;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.context-menu button:hover:not(:disabled) {
+  background: #22304a;
+  color: #ffffff;
+}
+
+.context-menu .danger-menu-item {
+  color: #ffb4ad;
 }
 
 .editor-panel > .field-block {

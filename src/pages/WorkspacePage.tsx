@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type DragEvent, type MouseEvent } from 'react'
 import { ContextPanel } from '../components/ContextPanel'
 import { Icon } from '../components/Icon'
 import {
@@ -22,6 +22,8 @@ type CreateDialogState =
   | { type: 'character' }
   | { type: 'setting' }
   | undefined
+
+type VolumeMenuState = { volumeId: string; x: number; y: number } | undefined
 
 export interface WorkspacePageProps {
   state: WebnovelIDEState
@@ -56,7 +58,9 @@ export function WorkspacePage(props: WorkspacePageProps) {
   const selectedSetting = projectSettings.find((setting) => setting.id === props.selectedSettingId)
   const [projectSettingsOpen, setProjectSettingsOpen] = useState(false)
   const [createDialog, setCreateDialog] = useState<CreateDialogState>()
-  const [assistantCollapsed, setAssistantCollapsed] = useState(false)
+  const [assistantCollapsed, setAssistantCollapsed] = useState(true)
+  const [draggingChapterId, setDraggingChapterId] = useState<string>()
+  const [volumeMenu, setVolumeMenu] = useState<VolumeMenuState>()
 
   function createVolume(form: Pick<Volume, 'title' | 'summary'>) {
     const timestamp = nowIso()
@@ -196,25 +200,40 @@ export function WorkspacePage(props: WorkspacePageProps) {
     props.onSetMainView('chapter')
   }
 
-  function moveChapter(chapterId: string, direction: -1 | 1) {
-    const chapter = projectChapters.find((item) => item.id === chapterId)
-    if (!chapter) return
+  function openVolumeMenu(event: MouseEvent, volumeId: string) {
+    event.preventDefault()
+    setVolumeMenu({ volumeId, x: event.clientX, y: event.clientY })
+  }
+
+  function reorderChapter(sourceChapterId: string | undefined, targetChapterId: string) {
+    if (!sourceChapterId || sourceChapterId === targetChapterId) return
+
+    const source = projectChapters.find((item) => item.id === sourceChapterId)
+    const target = projectChapters.find((item) => item.id === targetChapterId)
+    if (!source || !target || source.volumeId !== target.volumeId) return
 
     const siblings = projectChapters
-      .filter((item) => item.volumeId === chapter.volumeId)
+      .filter((item) => item.volumeId === source.volumeId)
       .sort((a, b) => a.order - b.order)
-    const index = siblings.findIndex((item) => item.id === chapterId)
-    const swapWith = siblings[index + direction]
-    if (!swapWith) return
+    const ordered = siblings.filter((item) => item.id !== sourceChapterId)
+    const targetIndex = ordered.findIndex((item) => item.id === targetChapterId)
+    ordered.splice(targetIndex, 0, source)
+    const nextOrderById = new Map(ordered.map((item, index) => [item.id, index + 1]))
+    const timestamp = nowIso()
 
     props.onPatchState((current) => ({
       ...current,
       chapters: current.chapters.map((item) => {
-        if (item.id === chapter.id) return { ...item, order: swapWith.order, updatedAt: nowIso() }
-        if (item.id === swapWith.id) return { ...item, order: chapter.order, updatedAt: nowIso() }
+        const order = nextOrderById.get(item.id)
+        if (order) return { ...item, order, updatedAt: timestamp }
         return item
       }),
     }))
+  }
+
+  function handleChapterDragStart(event: DragEvent, chapterId: string) {
+    event.dataTransfer.effectAllowed = 'move'
+    setDraggingChapterId(chapterId)
   }
 
   function deleteChapter(chapterId: string) {
@@ -271,7 +290,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
   }
 
   return (
-    <div className={`workspace ${assistantCollapsed ? 'assistant-collapsed' : ''}`}>
+    <div className={`workspace ${assistantCollapsed ? 'assistant-collapsed' : ''}`} onClick={() => setVolumeMenu(undefined)}>
       <header className="workspace-topbar">
         <div className="window-controls" aria-hidden="true">
           <span />
@@ -287,35 +306,9 @@ export function WorkspacePage(props: WorkspacePageProps) {
         </div>
         <div className="topbar-meta">
           <div className="toolbar-group">
-            <button className="button-with-icon" disabled={!props.chapter} onClick={() => exportActiveChapter('txt')}>
-              <Icon name="file" />
-              <span>本章 TXT</span>
-            </button>
-            <button className="button-with-icon" disabled={!props.chapter} onClick={() => exportActiveChapter('md')}>
-              <Icon name="file" />
-              <span>本章 MD</span>
-            </button>
-            <button className="button-with-icon" onClick={() => exportBook('txt')}>
-              <Icon name="download" />
-              <span>全书 TXT</span>
-            </button>
-            <button className="button-with-icon" onClick={() => exportBook('md')}>
-              <Icon name="download" />
-              <span>全书 MD</span>
-            </button>
-          </div>
-          <div className="toolbar-group">
-            <button className="button-with-icon" onClick={props.onOpenAISettings}>
-              <Icon name="sparkles" />
-              <span>AI 配置</span>
-            </button>
-            <button className="button-with-icon" onClick={() => setProjectSettingsOpen(true)}>
-              <Icon name="settings" />
-              <span>作品设置</span>
-            </button>
             <button className="button-with-icon" onClick={() => setAssistantCollapsed((value) => !value)}>
               <Icon name={assistantCollapsed ? 'panel-right' : 'panel-left'} />
-              <span>{assistantCollapsed ? '展开助手' : '收起助手'}</span>
+              <span>{assistantCollapsed ? '打开助手' : '隐藏助手'}</span>
             </button>
           </div>
           <div className="save-status">
@@ -379,28 +372,37 @@ export function WorkspacePage(props: WorkspacePageProps) {
           </div>
           {projectVolumes.map((volume) => (
             <div className="volume-block" key={volume.id}>
-              <div className="volume-title">
+              <div className="volume-title" onContextMenu={(event) => openVolumeMenu(event, volume.id)}>
                 <span>{volume.title}</span>
                 <div className="inline-actions">
-                  <button className="icon-button" title="重命名卷" onClick={() => renameVolume(volume)}>
-                    <Icon name="edit" />
-                  </button>
                   <button
                     className="icon-button"
                     title="新建章节"
-                    onClick={() => setCreateDialog({ type: 'chapter', volumeId: volume.id })}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      setCreateDialog({ type: 'chapter', volumeId: volume.id })
+                    }}
                   >
                     <Icon name="plus" />
-                  </button>
-                  <button className="icon-button danger-button" title="删除卷" onClick={() => deleteVolume(volume.id)}>
-                    <Icon name="trash" />
                   </button>
                 </div>
               </div>
               {projectChapters
                 .filter((chapter) => chapter.volumeId === volume.id)
                 .map((chapter) => (
-                  <div className="chapter-row" key={chapter.id}>
+                  <div
+                    className={`chapter-row ${draggingChapterId === chapter.id ? 'dragging' : ''}`}
+                    draggable
+                    key={chapter.id}
+                    onDragEnd={() => setDraggingChapterId(undefined)}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDragStart={(event) => handleChapterDragStart(event, chapter.id)}
+                    onDrop={(event) => {
+                      event.preventDefault()
+                      reorderChapter(draggingChapterId, chapter.id)
+                      setDraggingChapterId(undefined)
+                    }}
+                  >
                     <button
                       className={`chapter-link ${chapter.id === props.chapter?.id ? 'active' : ''}`}
                       onClick={() => props.onSelectChapter(chapter.id)}
@@ -408,14 +410,6 @@ export function WorkspacePage(props: WorkspacePageProps) {
                       <span>{chapter.title}</span>
                       <small>{chapterStatusLabels[chapter.status]}</small>
                     </button>
-                    <div className="chapter-row-actions">
-                      <button className="icon-button" title="上移章节" onClick={() => moveChapter(chapter.id, -1)}>
-                        <Icon name="arrow-up" />
-                      </button>
-                      <button className="icon-button" title="下移章节" onClick={() => moveChapter(chapter.id, 1)}>
-                        <Icon name="arrow-down" />
-                      </button>
-                    </div>
                   </div>
                 ))}
             </div>
@@ -462,6 +456,25 @@ export function WorkspacePage(props: WorkspacePageProps) {
               {setting.title}
             </button>
           ))}
+        </section>
+
+        <section className="sidebar-export">
+          <div className="sidebar-heading">
+            <h2>
+              <Icon name="download" />
+              <span>导出</span>
+            </h2>
+          </div>
+          <div className="export-actions">
+            <button className="button-with-icon" onClick={() => exportBook('txt')}>
+              <Icon name="file" />
+              <span>TXT</span>
+            </button>
+            <button className="button-with-icon" onClick={() => exportBook('md')}>
+              <Icon name="file" />
+              <span>Markdown</span>
+            </button>
+          </div>
         </section>
       </aside>
 
@@ -544,6 +557,40 @@ export function WorkspacePage(props: WorkspacePageProps) {
       )}
       {createDialog?.type === 'setting' && (
         <CreateSettingDialog onClose={() => setCreateDialog(undefined)} onSubmit={createSetting} />
+      )}
+      {volumeMenu && (
+        <div
+          className="context-menu"
+          style={{ left: volumeMenu.x, top: volumeMenu.y }}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button
+            onClick={() => {
+              setCreateDialog({ type: 'chapter', volumeId: volumeMenu.volumeId })
+              setVolumeMenu(undefined)
+            }}
+          >
+            新建章节
+          </button>
+          <button
+            onClick={() => {
+              const volume = projectVolumes.find((item) => item.id === volumeMenu.volumeId)
+              if (volume) renameVolume(volume)
+              setVolumeMenu(undefined)
+            }}
+          >
+            重命名卷
+          </button>
+          <button
+            className="danger-menu-item"
+            onClick={() => {
+              deleteVolume(volumeMenu.volumeId)
+              setVolumeMenu(undefined)
+            }}
+          >
+            删除卷
+          </button>
+        </div>
       )}
     </div>
   )
