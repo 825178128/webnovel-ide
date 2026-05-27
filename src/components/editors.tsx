@@ -1,8 +1,6 @@
-import { chapterStatusLabels, settingCategoryLabels, settingImportanceLabels } from '../constants/labels'
-import { summarizeChapter } from '../services/chapterTools'
+import { settingCategoryLabels, settingImportanceLabels } from '../constants/labels'
 import type {
   Chapter,
-  ChapterStatus,
   Character,
   Setting,
   SettingCategory,
@@ -11,12 +9,9 @@ import type {
 } from '../types'
 import { countWords, nowIso } from '../utils'
 import { FormPanel, TextAreaField, TextField } from './forms'
-import { Icon } from './Icon'
 
 export function ChapterEditor(props: {
   chapter: Chapter
-  onDeleteChapter: (chapterId: string) => void
-  onExportChapter: (format: 'txt' | 'md') => void
   onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
 }) {
   function updateChapter(patch: Partial<Chapter>) {
@@ -45,43 +40,6 @@ export function ChapterEditor(props: {
         value={props.chapter.title}
         onChange={(event) => updateChapter({ title: event.target.value })}
       />
-      <div className="editor-toolbar">
-        <select
-          value={props.chapter.status}
-          onChange={(event) => updateChapter({ status: event.target.value as ChapterStatus })}
-        >
-          {Object.entries(chapterStatusLabels).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          className="button-with-icon"
-          onClick={() => updateChapter({ summary: summarizeChapter(props.chapter) })}
-        >
-          <Icon name="sparkles" />
-          <span>总结本章</span>
-        </button>
-        <button type="button" className="button-with-icon" onClick={() => props.onExportChapter('txt')}>
-          <Icon name="download" />
-          <span>导出 TXT</span>
-        </button>
-        <button type="button" className="button-with-icon" onClick={() => props.onExportChapter('md')}>
-          <Icon name="download" />
-          <span>导出 MD</span>
-        </button>
-        <button
-          type="button"
-          className="danger-button button-with-icon"
-          onClick={() => props.onDeleteChapter(props.chapter.id)}
-        >
-          <Icon name="trash" />
-          <span>删除</span>
-        </button>
-        <span>{props.chapter.wordCount} 字</span>
-      </div>
       <label className="field-block">
         本章目标
         <textarea

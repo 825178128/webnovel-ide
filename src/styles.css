@@ -1011,32 +1011,6 @@ textarea {
   box-shadow: none;
 }
 
-.editor-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  flex-wrap: wrap;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--editor-surface);
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
-  padding: 10px;
-}
-
-.editor-toolbar select {
-  max-width: 140px;
-}
-
-.editor-toolbar button {
-  white-space: nowrap;
-}
-
-.editor-toolbar span {
-  margin-left: auto;
-  color: var(--muted);
-  font-weight: 700;
-}
-
 .chapter-content {
   min-height: 56vh;
   border-color: var(--border);
@@ -1096,12 +1070,13 @@ textarea {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--editor-surface);
-  padding: 12px;
+  padding: 10px 12px 12px;
 }
 
 .editor-panel > .field-block textarea {
   border-color: var(--border);
   background: var(--field-surface);
+  min-height: 74px;
 }
 
 .form-panel {

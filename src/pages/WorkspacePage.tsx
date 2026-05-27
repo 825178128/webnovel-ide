@@ -488,8 +488,6 @@ export function WorkspacePage(props: WorkspacePageProps) {
         {props.mainView === 'chapter' && props.chapter && (
           <ChapterEditor
             chapter={props.chapter}
-            onDeleteChapter={deleteChapter}
-            onExportChapter={exportActiveChapter}
             onPatchState={props.onPatchState}
           />
         )}
