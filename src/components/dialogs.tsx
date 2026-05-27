@@ -235,7 +235,7 @@ export function AppSettingsDialog(props: {
   }
 
   return (
-    <DialogShell title="应用设置" onClose={props.onClose}>
+    <DialogShell title="应用设置" className="settings-dialog-shell" onClose={props.onClose}>
       <form
         className="dialog-body app-settings-dialog"
         onSubmit={(event) => {
@@ -488,10 +488,15 @@ export function CreateSettingDialog(props: {
   )
 }
 
-function DialogShell(props: { title: string; onClose: () => void; children: React.ReactNode }) {
+function DialogShell(props: {
+  title: string
+  className?: string
+  onClose: () => void
+  children: React.ReactNode
+}) {
   return (
     <div className="dialog-backdrop">
-      <section className="dialog">
+      <section className={`dialog ${props.className ?? ''}`}>
         <header>
           <h2>{props.title}</h2>
           <button type="button" className="ghost-button" onClick={props.onClose}>
