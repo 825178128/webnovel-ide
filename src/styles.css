@@ -585,6 +585,10 @@ textarea {
   gap: 12px;
 }
 
+.form-grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
 .dialog-body textarea {
   min-height: 110px;
 }
@@ -1393,8 +1397,8 @@ textarea {
 
 .form-panel {
   display: grid;
-  gap: 16px;
-  max-width: 940px;
+  gap: 20px;
+  max-width: 1040px;
   margin: 0 auto;
 }
 
@@ -1495,7 +1499,7 @@ textarea {
   border-radius: var(--radius-md);
   background: var(--surface);
   box-shadow: var(--shadow-soft);
-  padding: 20px;
+  padding: 22px 24px 24px;
 }
 
 .form-panel h1 {
@@ -1508,6 +1512,8 @@ textarea {
   align-items: flex-start;
   justify-content: space-between;
   gap: 18px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 18px;
 }
 
 .form-panel-header > div {
@@ -1529,6 +1535,28 @@ textarea {
 .form-actions {
   display: flex;
   justify-content: flex-end;
+}
+
+.form-section {
+  display: grid;
+  gap: 14px;
+}
+
+.form-section + .form-section {
+  border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  padding-top: 18px;
+}
+
+.form-section-title {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.entity-editor-panel textarea,
+.setting-editor-panel textarea {
+  min-height: 132px;
 }
 
 .context-card {
