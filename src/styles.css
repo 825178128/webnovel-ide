@@ -29,6 +29,8 @@
   --page-max: 1180px;
   --shadow: 0 18px 55px rgba(15, 23, 42, 0.12);
   --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --shadow-card: 0 6px 18px rgba(15, 23, 42, 0.04);
+  --shadow-popover: 0 18px 45px rgba(15, 23, 42, 0.18);
   color: var(--text);
   background: var(--bg);
   font-family:
@@ -78,6 +80,8 @@
   --tab-bg: #172033;
   --shadow: 0 20px 58px rgba(0, 0, 0, 0.32);
   --shadow-soft: 0 12px 32px rgba(0, 0, 0, 0.18);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.16);
+  --shadow-popover: 0 18px 48px rgba(0, 0, 0, 0.36);
   color-scheme: dark;
 }
 
@@ -116,6 +120,8 @@
   --field-surface: #ffffff;
   --context-bg: #f8fafc;
   --tab-bg: #ffffff;
+  --shadow-card: 0 6px 18px rgba(15, 23, 42, 0.04);
+  --shadow-popover: 0 18px 45px rgba(15, 23, 42, 0.18);
   color-scheme: light;
 }
 
@@ -750,8 +756,8 @@ textarea {
 }
 
 .theme-option.active {
-  border-color: #5f86ff;
-  box-shadow: 0 0 0 3px rgba(95, 134, 255, 0.2);
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .theme-option-dark.active,
@@ -1030,7 +1036,7 @@ textarea {
   border: 1px solid var(--chrome-border);
   border-radius: var(--radius-md);
   background: var(--chrome-bg);
-  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.2);
+  box-shadow: var(--shadow-popover);
   padding: 6px;
 }
 
@@ -1097,7 +1103,7 @@ textarea {
   border-color: var(--border);
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--shadow-card);
 }
 
 .context-panel-body {
@@ -1429,7 +1435,7 @@ textarea {
   border: 1px solid var(--chrome-border);
   border-radius: var(--radius-md);
   background: var(--chrome-bg);
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+  box-shadow: var(--shadow-popover);
   padding: 6px;
 }
 
@@ -1516,7 +1522,7 @@ textarea {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface);
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--shadow-card);
   padding: 12px;
 }
 
@@ -1562,7 +1568,7 @@ textarea {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface);
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--shadow-card);
   padding: 12px;
 }
 
