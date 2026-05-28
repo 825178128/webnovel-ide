@@ -385,6 +385,15 @@ export function WorkspacePage(props: WorkspacePageProps) {
     setExportMenuOpen(false)
   }
 
+  const workspaceModeLabel =
+    props.mainView === 'chapter' ? '章节编辑' : props.mainView === 'character' ? '人物卡' : '资料卡'
+  const activeResourceLabel =
+    props.mainView === 'chapter'
+      ? props.chapter?.title
+      : props.mainView === 'character'
+        ? selectedCharacter?.name
+        : selectedSetting?.title
+
   return (
     <div
       className={`workspace ${assistantCollapsed ? 'assistant-collapsed' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}
@@ -412,10 +421,15 @@ export function WorkspacePage(props: WorkspacePageProps) {
           )}
           <div className="workspace-title">
             <strong>{props.project.title}</strong>
-            <span>作品工作台</span>
+            <span>{workspaceModeLabel}</span>
           </div>
         </div>
         <div className="workspace-topbar-spacer" />
+        {activeResourceLabel && (
+          <div className="workspace-current-resource" title={activeResourceLabel}>
+            {activeResourceLabel}
+          </div>
+        )}
         <div className="topbar-meta">
           <div className="toolbar-group assistant-toolbar">
             <button
@@ -708,11 +722,19 @@ export function WorkspacePage(props: WorkspacePageProps) {
         />
       )}
       <footer className="workspace-statusbar">
-        <span>自动保存</span>
-        <span>{props.chapter?.wordCount ?? 0} 字</span>
-        <span>{projectChapters.length} 章</span>
-        <span>{projectCharacters.length} 人物</span>
-        <span>{projectSettings.length} 设定</span>
+        <div className="statusbar-left">
+          <span className="save-status">
+            <span className="status-dot" />
+            自动保存
+          </span>
+          <span>{workspaceModeLabel}</span>
+        </div>
+        <div className="statusbar-right">
+          <span>{props.chapter?.wordCount ?? 0} 字</span>
+          <span>{projectChapters.length} 章</span>
+          <span>{projectCharacters.length} 人物</span>
+          <span>{projectSettings.length} 资料</span>
+        </div>
       </footer>
       {projectSettingsOpen && (
         <ProjectSettingsDialog

@@ -864,6 +864,21 @@ textarea {
   flex: 1;
 }
 
+.workspace-current-resource {
+  max-width: min(360px, 32vw);
+  overflow: hidden;
+  border: 1px solid var(--chrome-border);
+  border-radius: var(--radius-sm);
+  background: var(--chrome-bg-2);
+  color: var(--muted-strong);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 8px 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .topbar-meta {
   margin-left: auto;
   display: flex;
@@ -1651,6 +1666,7 @@ textarea {
   grid-row: 3;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 18px;
   border-top: 1px solid var(--chrome-border);
   background: var(--activity-bg);
@@ -1659,6 +1675,25 @@ textarea {
   padding: 0 12px;
 }
 
-.workspace-statusbar span:first-child {
+.statusbar-left,
+.statusbar-right {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 14px;
+}
+
+.save-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--text);
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--success);
+  box-shadow: 0 0 0 3px var(--success-soft);
 }
