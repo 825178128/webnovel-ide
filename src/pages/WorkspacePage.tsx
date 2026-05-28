@@ -25,6 +25,8 @@ type CreateDialogState =
 
 type VolumeMenuState = { volumeId: string; x: number; y: number } | undefined
 type ChapterMenuState = { chapterId: string; x: number; y: number } | undefined
+type CharacterMenuState = { characterId: string; x: number; y: number } | undefined
+type SettingMenuState = { settingId: string; x: number; y: number } | undefined
 
 export interface WorkspacePageProps {
   state: WebnovelIDEState
@@ -65,6 +67,8 @@ export function WorkspacePage(props: WorkspacePageProps) {
   const [dragOverChapterId, setDragOverChapterId] = useState<string>()
   const [volumeMenu, setVolumeMenu] = useState<VolumeMenuState>()
   const [chapterMenu, setChapterMenu] = useState<ChapterMenuState>()
+  const [characterMenu, setCharacterMenu] = useState<CharacterMenuState>()
+  const [settingMenu, setSettingMenu] = useState<SettingMenuState>()
   const activeChapterRowRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -215,6 +219,8 @@ export function WorkspacePage(props: WorkspacePageProps) {
     setExportMenuOpen(false)
     setVolumeMenu({ volumeId, x: event.clientX, y: event.clientY })
     setChapterMenu(undefined)
+    setCharacterMenu(undefined)
+    setSettingMenu(undefined)
   }
 
   function openChapterMenu(event: MouseEvent, chapterId: string) {
@@ -222,6 +228,26 @@ export function WorkspacePage(props: WorkspacePageProps) {
     setExportMenuOpen(false)
     setChapterMenu({ chapterId, x: event.clientX, y: event.clientY })
     setVolumeMenu(undefined)
+    setCharacterMenu(undefined)
+    setSettingMenu(undefined)
+  }
+
+  function openCharacterMenu(event: MouseEvent, characterId: string) {
+    event.preventDefault()
+    setExportMenuOpen(false)
+    setCharacterMenu({ characterId, x: event.clientX, y: event.clientY })
+    setVolumeMenu(undefined)
+    setChapterMenu(undefined)
+    setSettingMenu(undefined)
+  }
+
+  function openSettingMenu(event: MouseEvent, settingId: string) {
+    event.preventDefault()
+    setExportMenuOpen(false)
+    setSettingMenu({ settingId, x: event.clientX, y: event.clientY })
+    setVolumeMenu(undefined)
+    setChapterMenu(undefined)
+    setCharacterMenu(undefined)
   }
 
   function toggleVolume(volumeId: string) {
@@ -244,6 +270,30 @@ export function WorkspacePage(props: WorkspacePageProps) {
       ...current,
       chapters: current.chapters.map((item) =>
         item.id === chapter.id ? { ...item, title: title.trim(), updatedAt: nowIso() } : item,
+      ),
+    }))
+  }
+
+  function renameCharacter(character: Character) {
+    const name = window.prompt('人物名', character.name)
+    if (!name?.trim()) return
+
+    props.onPatchState((current) => ({
+      ...current,
+      characters: current.characters.map((item) =>
+        item.id === character.id ? { ...item, name: name.trim(), updatedAt: nowIso() } : item,
+      ),
+    }))
+  }
+
+  function renameSetting(setting: Setting) {
+    const title = window.prompt('资料标题', setting.title)
+    if (!title?.trim()) return
+
+    props.onPatchState((current) => ({
+      ...current,
+      settings: current.settings.map((item) =>
+        item.id === setting.id ? { ...item, title: title.trim(), updatedAt: nowIso() } : item,
       ),
     }))
   }
@@ -341,6 +391,8 @@ export function WorkspacePage(props: WorkspacePageProps) {
         setExportMenuOpen(false)
         setVolumeMenu(undefined)
         setChapterMenu(undefined)
+        setCharacterMenu(undefined)
+        setSettingMenu(undefined)
       }}
     >
       <header className="workspace-topbar">
@@ -576,6 +628,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
                 className={`plain-list-item ${character.id === selectedCharacter?.id ? 'active' : ''}`}
                 key={character.id}
                 onClick={() => props.onSelectCharacter(character.id)}
+                onContextMenu={(event) => openCharacterMenu(event, character.id)}
               >
                 {character.name}
               </button>
@@ -607,6 +660,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
                 className={`plain-list-item ${setting.id === selectedSetting?.id ? 'active' : ''}`}
                 key={setting.id}
                 onClick={() => props.onSelectSetting(setting.id)}
+                onContextMenu={(event) => openSettingMenu(event, setting.id)}
               >
                 {setting.title}
               </button>
@@ -750,6 +804,74 @@ export function WorkspacePage(props: WorkspacePageProps) {
             }}
           >
             删除章节
+          </button>
+        </div>
+      )}
+      {characterMenu && (
+        <div
+          className="context-menu"
+          style={{ left: characterMenu.x, top: characterMenu.y }}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button
+            onClick={() => {
+              const character = projectCharacters.find((item) => item.id === characterMenu.characterId)
+              if (character) renameCharacter(character)
+              setCharacterMenu(undefined)
+            }}
+          >
+            重命名人物
+          </button>
+          <button
+            onClick={() => {
+              props.onSelectCharacter(characterMenu.characterId)
+              setCharacterMenu(undefined)
+            }}
+          >
+            打开人物卡
+          </button>
+          <button
+            className="danger-menu-item"
+            onClick={() => {
+              deleteCharacter(characterMenu.characterId)
+              setCharacterMenu(undefined)
+            }}
+          >
+            删除人物
+          </button>
+        </div>
+      )}
+      {settingMenu && (
+        <div
+          className="context-menu"
+          style={{ left: settingMenu.x, top: settingMenu.y }}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button
+            onClick={() => {
+              const setting = projectSettings.find((item) => item.id === settingMenu.settingId)
+              if (setting) renameSetting(setting)
+              setSettingMenu(undefined)
+            }}
+          >
+            重命名资料
+          </button>
+          <button
+            onClick={() => {
+              props.onSelectSetting(settingMenu.settingId)
+              setSettingMenu(undefined)
+            }}
+          >
+            打开资料卡
+          </button>
+          <button
+            className="danger-menu-item"
+            onClick={() => {
+              deleteSetting(settingMenu.settingId)
+              setSettingMenu(undefined)
+            }}
+          >
+            删除资料
           </button>
         </div>
       )}
