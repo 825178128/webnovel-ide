@@ -276,8 +276,10 @@ textarea {
 
 .projects-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 14px;
   max-width: var(--page-max);
   margin: 0 auto 16px;
   border-bottom: 1px solid var(--border);
@@ -287,6 +289,7 @@ textarea {
 .projects-heading {
   display: flex;
   min-width: 0;
+  flex-wrap: wrap;
   align-items: center;
   gap: 20px;
 }
@@ -324,7 +327,9 @@ textarea {
 
 .header-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
 }
 

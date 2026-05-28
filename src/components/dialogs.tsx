@@ -357,7 +357,7 @@ export function CreateVolumeDialog(props: {
           props.onSubmit({ title: title.trim(), summary: summary.trim() })
         }}
       >
-        <TextField label="卷名" value={title} onChange={setTitle} />
+        <TextField label="卷名" value={title} onChange={setTitle} autoFocus />
         <TextAreaField label="卷简介" value={summary} onChange={setSummary} />
         <footer>
           <button type="button" onClick={props.onClose}>
@@ -390,7 +390,7 @@ export function CreateChapterDialog(props: {
           props.onSubmit({ title: title.trim(), goal: goal.trim() })
         }}
       >
-        <TextField label="章节标题" value={title} onChange={setTitle} />
+        <TextField label="章节标题" value={title} onChange={setTitle} autoFocus />
         <TextAreaField label="本章目标" value={goal} onChange={setGoal} />
         <footer>
           <button type="button" onClick={props.onClose}>
@@ -423,7 +423,7 @@ export function CreateCharacterDialog(props: {
           props.onSubmit({ name: name.trim(), role: role.trim(), faction: faction.trim() })
         }}
       >
-        <TextField label="姓名" value={name} onChange={setName} />
+        <TextField label="姓名" value={name} onChange={setName} autoFocus />
         <TextField label="身份" value={role} onChange={setRole} />
         <TextField label="阵营/势力" value={faction} onChange={setFaction} />
         <footer>
@@ -463,7 +463,7 @@ export function CreateSettingDialog(props: {
           })
         }}
       >
-        <TextField label="标题" value={title} onChange={setTitle} />
+        <TextField label="标题" value={title} onChange={setTitle} autoFocus />
         <div className="form-grid">
           <label className="field-block">
             分类
