@@ -1451,6 +1451,9 @@ textarea {
   z-index: 30;
   display: grid;
   min-width: 160px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 16px);
+  overflow: auto;
   border: 1px solid var(--chrome-border);
   border-radius: var(--radius-md);
   background: var(--chrome-bg);

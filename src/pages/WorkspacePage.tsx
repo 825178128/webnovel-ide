@@ -28,6 +28,19 @@ type ChapterMenuState = { chapterId: string; x: number; y: number } | undefined
 type CharacterMenuState = { characterId: string; x: number; y: number } | undefined
 type SettingMenuState = { settingId: string; x: number; y: number } | undefined
 
+function getContextMenuPosition(event: MouseEvent) {
+  const margin = 8
+  const estimatedWidth = 184
+  const estimatedHeight = 144
+  const maxX = window.innerWidth - estimatedWidth - margin
+  const maxY = window.innerHeight - estimatedHeight - margin
+
+  return {
+    x: Math.max(margin, Math.min(event.clientX, maxX)),
+    y: Math.max(margin, Math.min(event.clientY, maxY)),
+  }
+}
+
 export interface WorkspacePageProps {
   state: WebnovelIDEState
   project: Project
@@ -225,8 +238,9 @@ export function WorkspacePage(props: WorkspacePageProps) {
 
   function openVolumeMenu(event: MouseEvent, volumeId: string) {
     event.preventDefault()
+    const position = getContextMenuPosition(event)
     setExportMenuOpen(false)
-    setVolumeMenu({ volumeId, x: event.clientX, y: event.clientY })
+    setVolumeMenu({ volumeId, ...position })
     setChapterMenu(undefined)
     setCharacterMenu(undefined)
     setSettingMenu(undefined)
@@ -234,8 +248,9 @@ export function WorkspacePage(props: WorkspacePageProps) {
 
   function openChapterMenu(event: MouseEvent, chapterId: string) {
     event.preventDefault()
+    const position = getContextMenuPosition(event)
     setExportMenuOpen(false)
-    setChapterMenu({ chapterId, x: event.clientX, y: event.clientY })
+    setChapterMenu({ chapterId, ...position })
     setVolumeMenu(undefined)
     setCharacterMenu(undefined)
     setSettingMenu(undefined)
@@ -243,8 +258,9 @@ export function WorkspacePage(props: WorkspacePageProps) {
 
   function openCharacterMenu(event: MouseEvent, characterId: string) {
     event.preventDefault()
+    const position = getContextMenuPosition(event)
     setExportMenuOpen(false)
-    setCharacterMenu({ characterId, x: event.clientX, y: event.clientY })
+    setCharacterMenu({ characterId, ...position })
     setVolumeMenu(undefined)
     setChapterMenu(undefined)
     setSettingMenu(undefined)
@@ -252,8 +268,9 @@ export function WorkspacePage(props: WorkspacePageProps) {
 
   function openSettingMenu(event: MouseEvent, settingId: string) {
     event.preventDefault()
+    const position = getContextMenuPosition(event)
     setExportMenuOpen(false)
-    setSettingMenu({ settingId, x: event.clientX, y: event.clientY })
+    setSettingMenu({ settingId, ...position })
     setVolumeMenu(undefined)
     setChapterMenu(undefined)
     setCharacterMenu(undefined)
