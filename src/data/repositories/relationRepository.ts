@@ -1,5 +1,6 @@
-import type { WebnovelIDEState } from '../types'
-import { nowIso } from '../utils'
+import type { WebnovelIDEState } from '../../types'
+import { nowIso } from '../../utils'
+import { touchState } from './stateHelpers'
 
 export function toggleChapterCharacter(
   state: WebnovelIDEState,
@@ -10,14 +11,14 @@ export function toggleChapterCharacter(
     (item) => item.chapterId === chapterId && item.characterId === characterId,
   )
 
-  return {
+  return touchState({
     ...state,
     chapterCharacters: exists
       ? state.chapterCharacters.filter(
           (item) => !(item.chapterId === chapterId && item.characterId === characterId),
         )
       : [...state.chapterCharacters, { chapterId, characterId, createdAt: nowIso() }],
-  }
+  })
 }
 
 export function toggleChapterSetting(
@@ -29,10 +30,10 @@ export function toggleChapterSetting(
     (item) => item.chapterId === chapterId && item.settingId === settingId,
   )
 
-  return {
+  return touchState({
     ...state,
     chapterSettings: exists
       ? state.chapterSettings.filter((item) => !(item.chapterId === chapterId && item.settingId === settingId))
       : [...state.chapterSettings, { chapterId, settingId, createdAt: nowIso() }],
-  }
+  })
 }

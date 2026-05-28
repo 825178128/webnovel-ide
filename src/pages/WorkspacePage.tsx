@@ -10,9 +10,29 @@ import {
 } from '../components/dialogs'
 import { ChapterEditor, CharacterEditor, SettingEditor } from '../components/editors'
 import { chapterStatusLabels } from '../constants/labels'
+import {
+  createChapter as createChapterRecord,
+  createVolume as createVolumeRecord,
+  deleteChapter as deleteChapterRecord,
+  deleteVolume as deleteVolumeRecord,
+  renameChapter as renameChapterRecord,
+  renameVolume as renameVolumeRecord,
+  reorderChapter as reorderChapterRecord,
+} from '../data/repositories/chapterRepository'
+import {
+  createCharacter as createCharacterRecord,
+  deleteCharacter as deleteCharacterRecord,
+  renameCharacter as renameCharacterRecord,
+} from '../data/repositories/characterRepository'
+import {
+  createSetting as createSettingRecord,
+  deleteSetting as deleteSettingRecord,
+  renameSetting as renameSettingRecord,
+} from '../data/repositories/settingRepository'
+import { useDataStore } from '../data/DataContext'
 import { buildBookExport, type ExportFormat } from '../services/exportService'
-import type { Chapter, Character, Project, Setting, Volume, WebnovelIDEState } from '../types'
-import { createId, downloadText, nowIso } from '../utils'
+import type { Chapter, Character, Project, Setting, Volume } from '../types'
+import { downloadText } from '../utils'
 
 export type MainView = 'chapter' | 'character' | 'setting'
 
@@ -42,7 +62,6 @@ function getContextMenuPosition(event: MouseEvent) {
 }
 
 export interface WorkspacePageProps {
-  state: WebnovelIDEState
   project: Project
   chapter?: Chapter
   mainView: MainView
@@ -50,7 +69,6 @@ export interface WorkspacePageProps {
   selectedSettingId?: string
   onBack: () => void
   onOpenAppSettings: () => void
-  onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
   onSelectChapter: (chapterId: string) => void
   onSelectCharacter: (characterId: string) => void
   onSelectSetting: (settingId: string) => void
@@ -58,14 +76,15 @@ export interface WorkspacePageProps {
 }
 
 export function WorkspacePage(props: WorkspacePageProps) {
-  const projectVolumes = props.state.volumes
+  const { state, patchState } = useDataStore()
+  const projectVolumes = state.volumes
     .filter((volume) => volume.projectId === props.project.id)
     .sort((a, b) => a.order - b.order)
-  const projectChapters = props.state.chapters.filter((chapter) => chapter.projectId === props.project.id)
-  const projectCharacters = props.state.characters.filter(
+  const projectChapters = state.chapters.filter((chapter) => chapter.projectId === props.project.id)
+  const projectCharacters = state.characters.filter(
     (character) => character.projectId === props.project.id,
   )
-  const projectSettings = props.state.settings.filter((setting) => setting.projectId === props.project.id)
+  const projectSettings = state.settings.filter((setting) => setting.projectId === props.project.id)
   const selectedCharacter = projectCharacters.find(
     (character) => character.id === props.selectedCharacterId,
   )
@@ -95,111 +114,30 @@ export function WorkspacePage(props: WorkspacePageProps) {
   }, [props.chapter?.volumeId])
 
   function createVolume(form: Pick<Volume, 'title' | 'summary'>) {
-    const timestamp = nowIso()
-    const volumeId = createId('volume')
-
-    props.onPatchState((current) => ({
-      ...current,
-      volumes: [
-        ...current.volumes,
-        {
-          id: volumeId,
-          projectId: props.project.id,
-          title: form.title,
-          summary: form.summary,
-          order: projectVolumes.length + 1,
-          createdAt: timestamp,
-          updatedAt: timestamp,
-        },
-      ],
-    }))
-    setExpandedVolumeId(volumeId)
+    const result = createVolumeRecord(state, props.project.id, form)
+    patchState(() => result.state)
+    setExpandedVolumeId(result.volumeId)
     setCreateDialog(undefined)
   }
 
   function createChapter(volume: Volume, form: Pick<Chapter, 'title' | 'goal'>) {
-    const timestamp = nowIso()
-    const chapterId = createId('chapter')
-    const chaptersInVolume = projectChapters.filter((chapter) => chapter.volumeId === volume.id)
-    const nextOrder = Math.max(0, ...chaptersInVolume.map((chapter) => chapter.order)) + 1
-
-    props.onPatchState((current) => ({
-      ...current,
-      chapters: [
-        ...current.chapters,
-        {
-          id: chapterId,
-          projectId: props.project.id,
-          volumeId: volume.id,
-          title: form.title,
-          goal: form.goal,
-          summary: '',
-          content: '',
-          status: 'draft',
-          wordCount: 0,
-          order: nextOrder,
-          createdAt: timestamp,
-          updatedAt: timestamp,
-        },
-      ],
-      activeChapterId: chapterId,
-    }))
+    patchState((current) => createChapterRecord(current, props.project.id, volume.id, form).state)
     props.onSetMainView('chapter')
     setExpandedVolumeId(volume.id)
     setCreateDialog(undefined)
   }
 
   function createCharacter(form: Pick<Character, 'name' | 'role' | 'faction'>) {
-    const timestamp = nowIso()
-    const id = createId('character')
-
-    props.onPatchState((current) => ({
-      ...current,
-      characters: [
-        ...current.characters,
-        {
-          id,
-          projectId: props.project.id,
-          name: form.name,
-          role: form.role,
-          faction: form.faction,
-          personality: '',
-          desire: '',
-          abilities: '',
-          speechStyle: '',
-          currentState: '',
-          notes: '',
-          createdAt: timestamp,
-          updatedAt: timestamp,
-        },
-      ],
-    }))
-    props.onSelectCharacter(id)
+    const result = createCharacterRecord(state, props.project.id, form)
+    patchState(() => result.state)
+    props.onSelectCharacter(result.characterId)
     setCreateDialog(undefined)
   }
 
   function createSetting(form: Pick<Setting, 'title' | 'category' | 'content' | 'importance'>) {
-    const timestamp = nowIso()
-    const id = createId('setting')
-
-    props.onPatchState((current) => ({
-      ...current,
-      settings: [
-        ...current.settings,
-        {
-          id,
-          projectId: props.project.id,
-          title: form.title,
-          category: form.category,
-          content: form.content,
-          importance: form.importance,
-          notes: '',
-          createdAt: timestamp,
-          updatedAt: timestamp,
-        },
-      ],
-    }))
-    props.onSelectSetting(id)
+    const result = createSettingRecord(state, props.project.id, form)
+    patchState(() => result.state)
+    props.onSelectSetting(result.settingId)
     setCreateDialog(undefined)
   }
 
@@ -207,32 +145,14 @@ export function WorkspacePage(props: WorkspacePageProps) {
     const title = window.prompt('卷名', volume.title)
     if (!title?.trim()) return
 
-    props.onPatchState((current) => ({
-      ...current,
-      volumes: current.volumes.map((item) =>
-        item.id === volume.id ? { ...item, title: title.trim(), updatedAt: nowIso() } : item,
-      ),
-    }))
+    patchState((current) => renameVolumeRecord(current, volume.id, title.trim()))
   }
 
   function deleteVolume(volumeId: string) {
     const volume = projectVolumes.find((item) => item.id === volumeId)
     if (!volume || !window.confirm(`确定删除卷「${volume.title}」及其全部章节吗？`)) return
 
-    const chapterIds = projectChapters
-      .filter((chapter) => chapter.volumeId === volumeId)
-      .map((chapter) => chapter.id)
-    const remainingChapter = projectChapters.find((chapter) => !chapterIds.includes(chapter.id))
-
-    props.onPatchState((current) => ({
-      ...current,
-      volumes: current.volumes.filter((item) => item.id !== volumeId),
-      chapters: current.chapters.filter((item) => !chapterIds.includes(item.id)),
-      chapterCharacters: current.chapterCharacters.filter((item) => !chapterIds.includes(item.chapterId)),
-      chapterSettings: current.chapterSettings.filter((item) => !chapterIds.includes(item.chapterId)),
-      aiRequests: current.aiRequests.filter((item) => !item.chapterId || !chapterIds.includes(item.chapterId)),
-      activeChapterId: remainingChapter?.id,
-    }))
+    patchState((current) => deleteVolumeRecord(current, volumeId))
     props.onSetMainView('chapter')
   }
 
@@ -284,65 +204,27 @@ export function WorkspacePage(props: WorkspacePageProps) {
     const title = window.prompt('章节名', chapter.title)
     if (!title?.trim()) return
 
-    props.onPatchState((current) => ({
-      ...current,
-      chapters: current.chapters.map((item) =>
-        item.id === chapter.id ? { ...item, title: title.trim(), updatedAt: nowIso() } : item,
-      ),
-    }))
+    patchState((current) => renameChapterRecord(current, chapter.id, title.trim()))
   }
 
   function renameCharacter(character: Character) {
     const name = window.prompt('人物名', character.name)
     if (!name?.trim()) return
 
-    props.onPatchState((current) => ({
-      ...current,
-      characters: current.characters.map((item) =>
-        item.id === character.id ? { ...item, name: name.trim(), updatedAt: nowIso() } : item,
-      ),
-    }))
+    patchState((current) => renameCharacterRecord(current, character.id, name.trim()))
   }
 
   function renameSetting(setting: Setting) {
     const title = window.prompt('资料标题', setting.title)
     if (!title?.trim()) return
 
-    props.onPatchState((current) => ({
-      ...current,
-      settings: current.settings.map((item) =>
-        item.id === setting.id ? { ...item, title: title.trim(), updatedAt: nowIso() } : item,
-      ),
-    }))
+    patchState((current) => renameSettingRecord(current, setting.id, title.trim()))
   }
 
   function reorderChapter(sourceChapterId: string | undefined, targetChapterId: string) {
     if (!sourceChapterId || sourceChapterId === targetChapterId) return
 
-    const source = projectChapters.find((item) => item.id === sourceChapterId)
-    const target = projectChapters.find((item) => item.id === targetChapterId)
-    if (!source || !target || source.volumeId !== target.volumeId) return
-
-    const siblings = projectChapters.filter((item) => item.volumeId === source.volumeId)
-    const ordered = siblings.filter((item) => item.id !== sourceChapterId)
-    const targetIndex = ordered.findIndex((item) => item.id === targetChapterId)
-    ordered.splice(targetIndex, 0, source)
-    const nextOrderById = new Map(ordered.map((item, index) => [item.id, index + 1]))
-    const timestamp = nowIso()
-
-    props.onPatchState((current) => ({
-      ...current,
-      chapters: (() => {
-        const firstSiblingIndex = current.chapters.findIndex((item) => item.volumeId === source.volumeId)
-        const reorderedSiblings = ordered.map((item) => {
-          const order = nextOrderById.get(item.id)
-          return order ? { ...item, order, updatedAt: timestamp } : item
-        })
-        const nextChapters = current.chapters.filter((item) => item.volumeId !== source.volumeId)
-        nextChapters.splice(firstSiblingIndex, 0, ...reorderedSiblings)
-        return nextChapters
-      })(),
-    }))
+    patchState((current) => reorderChapterRecord(current, sourceChapterId, targetChapterId))
   }
 
   function handleChapterDragStart(event: DragEvent, chapterId: string) {
@@ -358,17 +240,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
     const chapter = projectChapters.find((item) => item.id === chapterId)
     if (!chapter || !window.confirm(`确定删除章节「${chapter.title}」吗？`)) return
 
-    const remainingChapters = projectChapters.filter((item) => item.id !== chapterId)
-    const nextActiveChapter = remainingChapters[0]
-
-    props.onPatchState((current) => ({
-      ...current,
-      chapters: current.chapters.filter((item) => item.id !== chapterId),
-      chapterCharacters: current.chapterCharacters.filter((item) => item.chapterId !== chapterId),
-      chapterSettings: current.chapterSettings.filter((item) => item.chapterId !== chapterId),
-      aiRequests: current.aiRequests.filter((item) => item.chapterId !== chapterId),
-      activeChapterId: nextActiveChapter?.id,
-    }))
+    patchState((current) => deleteChapterRecord(current, chapterId))
     props.onSetMainView('chapter')
   }
 
@@ -376,11 +248,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
     const character = projectCharacters.find((item) => item.id === characterId)
     if (!character || !window.confirm(`确定删除人物「${character.name}」吗？`)) return
 
-    props.onPatchState((current) => ({
-      ...current,
-      characters: current.characters.filter((item) => item.id !== characterId),
-      chapterCharacters: current.chapterCharacters.filter((item) => item.characterId !== characterId),
-    }))
+    patchState((current) => deleteCharacterRecord(current, characterId))
     props.onSetMainView('chapter')
   }
 
@@ -388,11 +256,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
     const setting = projectSettings.find((item) => item.id === settingId)
     if (!setting || !window.confirm(`确定删除设定「${setting.title}」吗？`)) return
 
-    props.onPatchState((current) => ({
-      ...current,
-      settings: current.settings.filter((item) => item.id !== settingId),
-      chapterSettings: current.chapterSettings.filter((item) => item.settingId !== settingId),
-    }))
+    patchState((current) => deleteSettingRecord(current, settingId))
     props.onSetMainView('chapter')
   }
 
@@ -730,16 +594,12 @@ export function WorkspacePage(props: WorkspacePageProps) {
 
       <main className={`main-panel main-panel-${props.mainView}`}>
         {props.mainView === 'chapter' && props.chapter && (
-          <ChapterEditor
-            chapter={props.chapter}
-            onPatchState={props.onPatchState}
-          />
+          <ChapterEditor chapter={props.chapter} />
         )}
         {props.mainView === 'character' && selectedCharacter && (
           <CharacterEditor
             character={selectedCharacter}
             onDeleteCharacter={deleteCharacter}
-            onPatchState={props.onPatchState}
           />
         )}
         {props.mainView === 'character' && !selectedCharacter && (
@@ -757,7 +617,6 @@ export function WorkspacePage(props: WorkspacePageProps) {
           <SettingEditor
             setting={selectedSetting}
             onDeleteSetting={deleteSetting}
-            onPatchState={props.onPatchState}
           />
         )}
         {props.mainView === 'setting' && !selectedSetting && (
@@ -775,7 +634,6 @@ export function WorkspacePage(props: WorkspacePageProps) {
 
       {!assistantCollapsed && (
         <ContextPanel
-          state={props.state}
           project={props.project}
           chapter={props.chapter}
           mainView={props.mainView}
@@ -783,7 +641,6 @@ export function WorkspacePage(props: WorkspacePageProps) {
           setting={selectedSetting}
           characters={projectCharacters}
           settings={projectSettings}
-          onPatchState={props.onPatchState}
         />
       )}
       <footer className="workspace-statusbar">
@@ -805,7 +662,6 @@ export function WorkspacePage(props: WorkspacePageProps) {
         <ProjectSettingsDialog
           project={props.project}
           onClose={() => setProjectSettingsOpen(false)}
-          onPatchState={props.onPatchState}
         />
       )}
       {createDialog?.type === 'volume' && (

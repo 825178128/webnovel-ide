@@ -1,86 +1,70 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { AppSettingsDialog } from './components/dialogs'
 import { WorkspacePage, type MainView } from './pages/WorkspacePage'
 import { ProjectsPage } from './pages/ProjectsPage'
-import { loadState, saveState, seedProjectDefaults } from './storage'
-import type { Project, WebnovelIDEState } from './types'
-import { createId, nowIso } from './utils'
+import { DataProvider, useDataStore } from './data/DataContext'
+import { ensureDemoProject } from './data/fixtures/demoProject'
+import { createProject as createProjectRecord } from './data/repositories/projectRepository'
+import type { Project } from './types'
 
-export function App() {
-  const [state, setState] = useState<WebnovelIDEState>(() => loadState())
-  const [screen, setScreen] = useState<'projects' | 'workspace'>(
-    state.activeProjectId ? 'workspace' : 'projects',
-  )
+function AppInner() {
+  const { state, patchState } = useDataStore()
+  const [screen, setScreen] = useState<'projects' | 'workspace'>('projects')
+  const [activeProjectId, setActiveProjectId] = useState<string>()
+  const [activeChapterId, setActiveChapterId] = useState<string>()
   const [mainView, setMainView] = useState<MainView>('chapter')
   const [selectedCharacterId, setSelectedCharacterId] = useState<string>()
   const [selectedSettingId, setSelectedSettingId] = useState<string>()
   const [createProjectOpen, setCreateProjectOpen] = useState(false)
   const [appSettingsOpen, setAppSettingsOpen] = useState(false)
 
-  useEffect(() => {
-    saveState(state)
-  }, [state])
-
-  const activeProject = state.projects.find((project) => project.id === state.activeProjectId)
-  const activeChapter = state.chapters.find((chapter) => chapter.id === state.activeChapterId)
-
-  function patchState(updater: (current: WebnovelIDEState) => WebnovelIDEState) {
-    setState((current) => updater(current))
-  }
+  const activeProject = activeProjectId ? state.projects.find((project) => project.id === activeProjectId) : undefined
+  const activeChapter = activeChapterId ? state.chapters.find((chapter) => chapter.id === activeChapterId) : undefined
 
   function openProject(projectId: string) {
     const firstChapter = state.chapters.find((chapter) => chapter.projectId === projectId)
-
-    patchState((current) => ({
-      ...current,
-      activeProjectId: projectId,
-      activeChapterId: firstChapter?.id,
-    }))
+    setActiveProjectId(projectId)
+    setActiveChapterId(firstChapter?.id)
     setMainView('chapter')
     setScreen('workspace')
   }
 
   function createProject(form: Pick<Project, 'title' | 'genre' | 'synopsis' | 'targetPlatform'>) {
-    const timestamp = nowIso()
-    const projectId = createId('project')
-    const nextState = seedProjectDefaults(
-      {
-        ...state,
-        projects: [
-          ...state.projects,
-          {
-            id: projectId,
-            userId: 'user_local',
-            title: form.title,
-            genre: form.genre,
-            synopsis: form.synopsis,
-            targetPlatform: form.targetPlatform,
-            status: 'writing',
-            createdAt: timestamp,
-            updatedAt: timestamp,
-          },
-        ],
-      },
-      projectId,
-    )
-
-    setState(nextState)
+    const result = createProjectRecord(state, form)
+    patchState(() => result.state)
+    setActiveProjectId(result.projectId)
+    setActiveChapterId(result.firstChapterId)
     setCreateProjectOpen(false)
     setScreen('workspace')
     setMainView('chapter')
   }
 
+  function loadDemoProject() {
+    const result = ensureDemoProject(state)
+    patchState(() => result.state)
+    setActiveProjectId(result.projectId)
+    setActiveChapterId(result.firstChapterId)
+    setScreen('workspace')
+    setMainView('chapter')
+  }
+
+  function selectChapter(chapterId: string) {
+    setActiveChapterId(chapterId)
+    setMainView('chapter')
+  }
+
+  const theme = state.appSettings?.theme ?? 'dark'
+
   if (screen === 'projects' || !activeProject) {
     return (
-      <div className={`app-root theme-${state.appSettings?.theme ?? 'dark'}`}>
+      <div className={`app-root theme-${theme}`}>
         <ProjectsPage
-          state={state}
           createProjectOpen={createProjectOpen}
           appSettingsOpen={appSettingsOpen}
           onCreateProject={() => setCreateProjectOpen(true)}
           onOpenAppSettings={() => setAppSettingsOpen(true)}
+          onLoadDemoProject={loadDemoProject}
           onOpenProject={openProject}
-          onPatchState={patchState}
           onCloseCreateProject={() => setCreateProjectOpen(false)}
           onCloseAppSettings={() => setAppSettingsOpen(false)}
           onSubmitProject={createProject}
@@ -90,9 +74,8 @@ export function App() {
   }
 
   return (
-    <div className={`app-root theme-${state.appSettings?.theme ?? 'dark'}`}>
+    <div className={`app-root theme-${theme}`}>
       <WorkspacePage
-        state={state}
         project={activeProject}
         chapter={activeChapter}
         mainView={mainView}
@@ -100,11 +83,7 @@ export function App() {
         selectedSettingId={selectedSettingId}
         onBack={() => setScreen('projects')}
         onOpenAppSettings={() => setAppSettingsOpen(true)}
-        onPatchState={patchState}
-        onSelectChapter={(chapterId) => {
-          patchState((current) => ({ ...current, activeChapterId: chapterId }))
-          setMainView('chapter')
-        }}
+        onSelectChapter={selectChapter}
         onSelectCharacter={(characterId) => {
           setSelectedCharacterId(characterId)
           setMainView('character')
@@ -117,11 +96,17 @@ export function App() {
       />
       {appSettingsOpen && (
         <AppSettingsDialog
-          state={state}
           onClose={() => setAppSettingsOpen(false)}
-          onPatchState={patchState}
         />
       )}
     </div>
+  )
+}
+
+export function App() {
+  return (
+    <DataProvider>
+      <AppInner />
+    </DataProvider>
   )
 }

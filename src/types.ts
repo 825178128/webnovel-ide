@@ -19,6 +19,13 @@ export type AIRequestStatus = 'pending' | 'running' | 'succeeded' | 'failed'
 
 export type AppTheme = 'dark' | 'light'
 
+export interface DataStoreMeta {
+  schemaVersion: number
+  appVersion?: string
+  createdAt: string
+  updatedAt: string
+}
+
 export interface AIConfig {
   provider: string
   apiKey: string
@@ -139,6 +146,7 @@ export interface AIRequest {
 }
 
 export interface WebnovelIDEState {
+  meta: DataStoreMeta
   users: User[]
   projects: Project[]
   volumes: Volume[]
@@ -150,6 +158,4 @@ export interface WebnovelIDEState {
   aiRequests: AIRequest[]
   aiConfig?: AIConfig
   appSettings?: AppSettings
-  activeProjectId?: string
-  activeChapterId?: string
 }

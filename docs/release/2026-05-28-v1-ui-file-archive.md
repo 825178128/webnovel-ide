@@ -41,6 +41,7 @@
 | --- | --- |
 | `docs/architecture/01-tech-stack.md` | 技术栈选型 |
 | `docs/architecture/02-data-model.md` | MVP 数据模型 |
+| `docs/architecture/03-v1-data-store-design.md` | V1 数据层边界、仓储接口、迁移策略和保留扩展设计 |
 
 ## 5. 发布与验收文档
 
@@ -50,6 +51,13 @@
 | `docs/release/2026-05-28-v1-ui-acceptance-report.md` | V1 UI 验收报告 |
 | `docs/release/2026-05-28-v1-ui-file-archive.md` | 文件归档索引 |
 | `docs/release/2026-05-28-post-ui-roadmap.md` | UI 验收后的后续开发任务 |
+
+## 5.1 开发指导文档
+
+| 文件 | 用途 |
+| --- | --- |
+| `docs/development/01-v1-module-branching-guide.md` | V1 UI 后功能模块拆分、分支顺序、范围边界和验收指导 |
+| `docs/development/02-v1-data-store-implementation-plan.md` | V1 数据层 P0/P1/P2 实现顺序和 P0 完成记录 |
 
 ## 6. 源码目录
 
@@ -62,6 +70,12 @@
 | `src/storage.ts` | 本地状态加载、保存、初始化 |
 | `src/utils.ts` | 通用工具函数 |
 | `src/constants/labels.ts` | 状态、分类、任务等中文标签 |
+| `src/data/schema.ts` | 数据层 storage key 和 schema 版本 |
+| `src/data/migrations.ts` | 本地数据兼容加载和迁移补齐 |
+| `src/data/store.ts` | 数据层 load / save / reset 和默认项目初始化入口 |
+| `src/data/adapters/localStorageAdapter.ts` | localStorage 存储适配器 |
+| `src/data/fixtures/demoProject.ts` | 数据层演示作品样本，用于验证真实工作台数据 |
+| `src/data/repositories/*` | 项目、章节、人物、资料、关联和 AI 请求的数据操作仓储 |
 
 ## 7. 页面与组件
 
@@ -83,6 +97,13 @@
 | `src/services/chapterTools.ts` | 章节相关工具 |
 | `src/services/exportService.ts` | TXT / Markdown 导出 |
 | `src/services/stateRelations.ts` | 章节与人物、资料关联关系 |
+
+## 8.1 开发脚本
+
+| 文件 | 用途 |
+| --- | --- |
+| `scripts/run-data-store-smoke-test.mjs` | 使用 esbuild 执行 TypeScript 数据层自检脚本 |
+| `scripts/data-store-smoke-test.ts` | 验证演示数据、默认项目创建、关联、正文追加、AI 请求和删除级联 |
 
 ## 9. 不纳入归档的本地文件
 

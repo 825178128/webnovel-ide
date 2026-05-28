@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "test:data-store": "node scripts/run-data-store-smoke-test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

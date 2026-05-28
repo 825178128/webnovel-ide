@@ -1,23 +1,18 @@
 import { settingCategoryLabels, settingImportanceLabels } from '../constants/labels'
-import type {
-  Chapter,
-  Character,
-  Setting,
-  SettingCategory,
-  SettingImportance,
-  WebnovelIDEState,
-} from '../types'
+import { useDataStore } from '../data/DataContext'
+import type { Chapter, Character, Setting, SettingCategory, SettingImportance } from '../types'
 import { countWords, nowIso } from '../utils'
 import { TextAreaField, TextField } from './forms'
 
 export function ChapterEditor(props: {
   chapter: Chapter
-  onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
 }) {
+  const { patchState } = useDataStore()
+
   function updateChapter(patch: Partial<Chapter>) {
     const timestamp = nowIso()
 
-    props.onPatchState((current) => ({
+    patchState((current) => ({
       ...current,
       chapters: current.chapters.map((chapter) =>
         chapter.id === props.chapter.id
@@ -48,10 +43,11 @@ export function ChapterEditor(props: {
 export function CharacterEditor(props: {
   character: Character
   onDeleteCharacter: (characterId: string) => void
-  onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
 }) {
+  const { patchState } = useDataStore()
+
   function updateCharacter(patch: Partial<Character>) {
-    props.onPatchState((current) => ({
+    patchState((current) => ({
       ...current,
       characters: current.characters.map((character) =>
         character.id === props.character.id
@@ -120,10 +116,11 @@ export function CharacterEditor(props: {
 export function SettingEditor(props: {
   setting: Setting
   onDeleteSetting: (settingId: string) => void
-  onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
 }) {
+  const { patchState } = useDataStore()
+
   function updateSetting(patch: Partial<Setting>) {
-    props.onPatchState((current) => ({
+    patchState((current) => ({
       ...current,
       settings: current.settings.map((setting) =>
         setting.id === props.setting.id ? { ...setting, ...patch, updatedAt: nowIso() } : setting,

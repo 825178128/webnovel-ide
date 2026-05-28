@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { projectStatusLabels, settingCategoryLabels, settingImportanceLabels } from '../constants/labels'
+import { useDataStore } from '../data/DataContext'
 import type {
   Chapter,
   Character,
@@ -10,7 +11,6 @@ import type {
   SettingCategory,
   SettingImportance,
   Volume,
-  WebnovelIDEState,
 } from '../types'
 import { nowIso, parseOptionalNumber } from '../utils'
 import { TextAreaField, TextField } from './forms'
@@ -59,8 +59,8 @@ export function CreateProjectDialog(props: {
 export function ProjectSettingsDialog(props: {
   project: Project
   onClose: () => void
-  onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
 }) {
+  const { patchState } = useDataStore()
   const [title, setTitle] = useState(props.project.title)
   const [genre, setGenre] = useState(props.project.genre ?? '')
   const [targetPlatform, setTargetPlatform] = useState(props.project.targetPlatform ?? '')
@@ -72,7 +72,7 @@ export function ProjectSettingsDialog(props: {
   function saveProject() {
     if (!title.trim()) return
 
-    props.onPatchState((current) => ({
+    patchState((current) => ({
       ...current,
       projects: current.projects.map((project) =>
         project.id === props.project.id
@@ -134,10 +134,10 @@ export function ProjectSettingsDialog(props: {
 }
 
 export function AISettingsDialog(props: {
-  config: WebnovelIDEState['aiConfig']
+  config: { provider?: string; apiKey?: string; model?: string; baseUrl?: string }
   onClose: () => void
-  onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
 }) {
+  const { patchState } = useDataStore()
   const [provider, setProvider] = useState(props.config?.provider ?? 'mock')
   const [apiKey, setApiKey] = useState(props.config?.apiKey ?? '')
   const [model, setModel] = useState(props.config?.model ?? 'local-prototype')
@@ -145,7 +145,7 @@ export function AISettingsDialog(props: {
   const [testResult, setTestResult] = useState('')
 
   function saveConfig() {
-    props.onPatchState((current) => ({
+    patchState((current) => ({
       ...current,
       aiConfig: {
         provider: provider.trim() || 'mock',
@@ -204,20 +204,19 @@ export function AISettingsDialog(props: {
 }
 
 export function AppSettingsDialog(props: {
-  state: WebnovelIDEState
   onClose: () => void
-  onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
 }) {
+  const { state, patchState } = useDataStore()
   const [activeTab, setActiveTab] = useState<'appearance' | 'ai'>('appearance')
-  const [theme, setTheme] = useState<AppTheme>(props.state.appSettings?.theme ?? 'dark')
-  const [provider, setProvider] = useState(props.state.aiConfig?.provider ?? 'mock')
-  const [apiKey, setApiKey] = useState(props.state.aiConfig?.apiKey ?? '')
-  const [model, setModel] = useState(props.state.aiConfig?.model ?? 'local-prototype')
-  const [baseUrl, setBaseUrl] = useState(props.state.aiConfig?.baseUrl ?? '')
+  const [theme, setTheme] = useState<AppTheme>(state.appSettings?.theme ?? 'dark')
+  const [provider, setProvider] = useState(state.aiConfig?.provider ?? 'mock')
+  const [apiKey, setApiKey] = useState(state.aiConfig?.apiKey ?? '')
+  const [model, setModel] = useState(state.aiConfig?.model ?? 'local-prototype')
+  const [baseUrl, setBaseUrl] = useState(state.aiConfig?.baseUrl ?? '')
   const [testResult, setTestResult] = useState('')
 
   function saveSettings() {
-    props.onPatchState((current) => ({
+    patchState((current) => ({
       ...current,
       appSettings: {
         theme,

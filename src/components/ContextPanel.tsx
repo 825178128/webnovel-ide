@@ -1,16 +1,17 @@
 import { useMemo, useState } from 'react'
 import { Icon } from './Icon'
 import { aiTaskLabels, chapterStatusLabels } from '../constants/labels'
+import { recordSucceededAIRequest } from '../data/repositories/aiRepository'
+import { appendChapterContent, updateChapter as updateChapterRecord } from '../data/repositories/chapterRepository'
+import { useDataStore } from '../data/DataContext'
 import { buildMockAIResult } from '../services/aiMock'
-import { toggleChapterCharacter, toggleChapterSetting } from '../services/stateRelations'
-import type { AITaskType, Chapter, ChapterStatus, Character, Project, Setting, WebnovelIDEState } from '../types'
-import { countWords, createId, nowIso } from '../utils'
+import { toggleChapterCharacter, toggleChapterSetting } from '../data/repositories/relationRepository'
+import type { AITaskType, Chapter, ChapterStatus, Character, Project, Setting } from '../types'
 
 type ContextPanelTab = 'properties' | 'context' | 'ai'
 type ContextPanelView = 'chapter' | 'character' | 'setting'
 
 export function ContextPanel(props: {
-  state: WebnovelIDEState
   project: Project
   mainView: ContextPanelView
   chapter?: Chapter
@@ -18,8 +19,8 @@ export function ContextPanel(props: {
   setting?: Setting
   characters: Character[]
   settings: Setting[]
-  onPatchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
 }) {
+  const { state, patchState } = useDataStore()
   const [activeTab, setActiveTab] = useState<ContextPanelTab>('properties')
   const [taskType, setTaskType] = useState<AITaskType>('continue')
   const [instruction, setInstruction] = useState('')
@@ -27,76 +28,53 @@ export function ContextPanel(props: {
 
   const relatedCharacters = useMemo(() => {
     if (!props.chapter) return []
-    const ids = props.state.chapterCharacters
+    const ids = state.chapterCharacters
       .filter((item) => item.chapterId === props.chapter?.id)
       .map((item) => item.characterId)
     return props.characters.filter((character) => ids.includes(character.id))
-  }, [props.chapter, props.characters, props.state.chapterCharacters])
+  }, [props.chapter, props.characters, state.chapterCharacters])
 
   const relatedSettings = useMemo(() => {
     if (!props.chapter) return []
-    const ids = props.state.chapterSettings
+    const ids = state.chapterSettings
       .filter((item) => item.chapterId === props.chapter?.id)
       .map((item) => item.settingId)
     return props.settings.filter((setting) => ids.includes(setting.id))
-  }, [props.chapter, props.settings, props.state.chapterSettings])
+  }, [props.chapter, props.settings, state.chapterSettings])
 
   function generateMockAI() {
     if (!props.chapter) return
     const output = buildMockAIResult(taskType, props.chapter, instruction)
-    const timestamp = nowIso()
 
-    props.onPatchState((current) => ({
-      ...current,
-      aiRequests: [
-        ...current.aiRequests,
-        {
-          id: createId('ai'),
-          userId: 'user_local',
-          projectId: props.project.id,
-          chapterId: props.chapter?.id,
-          taskType,
-          instruction,
-          inputSnapshot: JSON.stringify({
-            project: props.project.title,
-            chapter: props.chapter?.title,
-            relatedCharacters: relatedCharacters.map((character) => character.name),
-            relatedSettings: relatedSettings.map((setting) => setting.title),
-          }),
-          output,
-          provider: props.state.aiConfig?.provider ?? 'mock',
-          model: props.state.aiConfig?.model ?? 'local-prototype',
-          status: 'succeeded',
-          createdAt: timestamp,
-          completedAt: timestamp,
-        },
-      ],
-    }))
+    patchState((current) =>
+      recordSucceededAIRequest(current, {
+        projectId: props.project.id,
+        chapterId: props.chapter?.id,
+        taskType,
+        instruction,
+        inputSnapshot: JSON.stringify({
+          project: props.project.title,
+          chapter: props.chapter?.title,
+          relatedCharacters: relatedCharacters.map((character) => character.name),
+          relatedSettings: relatedSettings.map((setting) => setting.title),
+        }),
+        output,
+        provider: state.aiConfig?.provider ?? 'mock',
+        model: state.aiConfig?.model ?? 'local-prototype',
+      }),
+    )
     setResult(output)
   }
 
   function insertResult() {
     if (!props.chapter || !result) return
-    const nextContent = `${props.chapter.content}${props.chapter.content ? '\n\n' : ''}${result}`
 
-    props.onPatchState((current) => ({
-      ...current,
-      chapters: current.chapters.map((chapter) =>
-        chapter.id === props.chapter?.id
-          ? { ...chapter, content: nextContent, wordCount: countWords(nextContent), updatedAt: nowIso() }
-          : chapter,
-      ),
-    }))
+    patchState((current) => appendChapterContent(current, props.chapter!.id, result))
   }
 
   function updateChapter(patch: Partial<Chapter>) {
     if (!props.chapter) return
-    props.onPatchState((current) => ({
-      ...current,
-      chapters: current.chapters.map((chapter) =>
-        chapter.id === props.chapter?.id ? { ...chapter, ...patch, updatedAt: nowIso() } : chapter,
-      ),
-    }))
+    patchState((current) => updateChapterRecord(current, props.chapter!.id, patch))
   }
 
   const assistantTitle =
@@ -211,7 +189,7 @@ export function ContextPanel(props: {
                     getLabel={(character) => character.name}
                     onToggle={(characterId) => {
                       if (!props.chapter) return
-                      props.onPatchState((current) => toggleChapterCharacter(current, props.chapter!.id, characterId))
+                      patchState((current) => toggleChapterCharacter(current, props.chapter!.id, characterId))
                     }}
                   />
                 </section>
@@ -224,7 +202,7 @@ export function ContextPanel(props: {
                     getLabel={(setting) => setting.title}
                     onToggle={(settingId) => {
                       if (!props.chapter) return
-                      props.onPatchState((current) => toggleChapterSetting(current, props.chapter!.id, settingId))
+                      patchState((current) => toggleChapterSetting(current, props.chapter!.id, settingId))
                     }}
                   />
                 </section>
