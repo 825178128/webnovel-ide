@@ -31,6 +31,21 @@ V1 UI 原型完善。
 - [V1 UI 验收标准](D:/codex/webnovel-ide/docs/product/05-v1-ui-acceptance-criteria.md)
 - [技术栈选型](D:/codex/webnovel-ide/docs/architecture/01-tech-stack.md)
 - [MVP 数据模型](D:/codex/webnovel-ide/docs/architecture/02-data-model.md)
+- [V1 UI 阶段总结](D:/codex/webnovel-ide/docs/release/2026-05-28-v1-ui-stage-summary.md)
+- [V1 UI 验收报告](D:/codex/webnovel-ide/docs/release/2026-05-28-v1-ui-acceptance-report.md)
+- [V1 UI 文件归档索引](D:/codex/webnovel-ide/docs/release/2026-05-28-v1-ui-file-archive.md)
+- [V1 UI 后续开发任务](D:/codex/webnovel-ide/docs/release/2026-05-28-post-ui-roadmap.md)
+
+## V1 UI Acceptance
+
+`v1-development` 分支已完成 V1 UI 原型阶段验收。
+
+验收结论：
+
+- P0 已清零。
+- P1 已清零。
+- P2 进入后续 UI polish 或功能分支。
+- 当前分支可作为 V1 UI 基线合并到主分支。
 
 ## Local Development
 
