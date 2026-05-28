@@ -1407,6 +1407,38 @@ textarea {
   margin: 0 auto;
 }
 
+.main-empty-panel {
+  display: grid;
+  max-width: 520px;
+  justify-items: start;
+  gap: 12px;
+  margin: 64px auto 0;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--muted);
+  box-shadow: var(--shadow-card);
+  padding: 28px;
+}
+
+.main-empty-panel .icon {
+  color: var(--brand);
+}
+
+.main-empty-panel h1,
+.main-empty-panel p {
+  margin: 0;
+}
+
+.main-empty-panel h1 {
+  color: var(--text);
+  font-size: 22px;
+}
+
+.main-empty-panel p {
+  line-height: 1.6;
+}
+
 .chapter-title-input {
   border: 0;
   border-bottom: 1px solid var(--border);

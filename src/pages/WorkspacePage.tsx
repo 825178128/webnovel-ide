@@ -402,6 +402,36 @@ export function WorkspacePage(props: WorkspacePageProps) {
     setExportMenuOpen(false)
   }
 
+  function openCharacterView() {
+    if (selectedCharacter) {
+      props.onSetMainView('character')
+      return
+    }
+
+    const firstCharacter = projectCharacters[0]
+    if (firstCharacter) {
+      props.onSelectCharacter(firstCharacter.id)
+      return
+    }
+
+    props.onSetMainView('character')
+  }
+
+  function openSettingView() {
+    if (selectedSetting) {
+      props.onSetMainView('setting')
+      return
+    }
+
+    const firstSetting = projectSettings[0]
+    if (firstSetting) {
+      props.onSelectSetting(firstSetting.id)
+      return
+    }
+
+    props.onSetMainView('setting')
+  }
+
   const workspaceModeLabel =
     props.mainView === 'chapter' ? '章节编辑' : props.mainView === 'character' ? '人物卡' : '资料卡'
   const activeResourceLabel =
@@ -472,18 +502,14 @@ export function WorkspacePage(props: WorkspacePageProps) {
         <button
           className={props.mainView === 'character' ? 'active' : ''}
           title="人物"
-          onClick={() => {
-            if (selectedCharacter) props.onSetMainView('character')
-          }}
+          onClick={openCharacterView}
         >
           <Icon name="users" size={19} />
         </button>
         <button
           className={props.mainView === 'setting' ? 'active' : ''}
           title="设定"
-          onClick={() => {
-            if (selectedSetting) props.onSetMainView('setting')
-          }}
+          onClick={openSettingView}
         >
           <Icon name="database" size={19} />
         </button>
@@ -716,12 +742,34 @@ export function WorkspacePage(props: WorkspacePageProps) {
             onPatchState={props.onPatchState}
           />
         )}
+        {props.mainView === 'character' && !selectedCharacter && (
+          <section className="main-empty-panel">
+            <Icon name="users" size={24} />
+            <h1>还没有人物卡</h1>
+            <p>人物卡用于维护主角、配角、阵营和口吻信息。</p>
+            <button className="primary-button button-with-icon" onClick={() => setCreateDialog({ type: 'character' })}>
+              <Icon name="plus" />
+              <span>添加主要人物</span>
+            </button>
+          </section>
+        )}
         {props.mainView === 'setting' && selectedSetting && (
           <SettingEditor
             setting={selectedSetting}
             onDeleteSetting={deleteSetting}
             onPatchState={props.onPatchState}
           />
+        )}
+        {props.mainView === 'setting' && !selectedSetting && (
+          <section className="main-empty-panel">
+            <Icon name="database" size={24} />
+            <h1>还没有资料卡</h1>
+            <p>资料卡用于沉淀世界观、规则、地点、组织和素材索引。</p>
+            <button className="primary-button button-with-icon" onClick={() => setCreateDialog({ type: 'setting' })}>
+              <Icon name="plus" />
+              <span>添加设定资料</span>
+            </button>
+          </section>
         )}
       </main>
 
