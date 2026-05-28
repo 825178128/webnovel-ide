@@ -61,7 +61,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
   const [createDialog, setCreateDialog] = useState<CreateDialogState>()
   const [assistantCollapsed, setAssistantCollapsed] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [collapsedVolumeIds, setCollapsedVolumeIds] = useState<Set<string>>(() => new Set())
+  const [expandedVolumeId, setExpandedVolumeId] = useState<string | undefined>(props.chapter?.volumeId)
   const [exportMenuOpen, setExportMenuOpen] = useState(false)
   const [draggingChapterId, setDraggingChapterId] = useState<string>()
   const [dragOverChapterId, setDragOverChapterId] = useState<string>()
@@ -73,17 +73,24 @@ export function WorkspacePage(props: WorkspacePageProps) {
 
   useEffect(() => {
     activeChapterRowRef.current?.scrollIntoView({ block: 'end' })
-  }, [props.chapter?.id, collapsedVolumeIds])
+  }, [props.chapter?.id, expandedVolumeId])
+
+  useEffect(() => {
+    if (props.chapter?.volumeId) {
+      setExpandedVolumeId(props.chapter.volumeId)
+    }
+  }, [props.chapter?.volumeId])
 
   function createVolume(form: Pick<Volume, 'title' | 'summary'>) {
     const timestamp = nowIso()
+    const volumeId = createId('volume')
 
     props.onPatchState((current) => ({
       ...current,
       volumes: [
         ...current.volumes,
         {
-          id: createId('volume'),
+          id: volumeId,
           projectId: props.project.id,
           title: form.title,
           summary: form.summary,
@@ -93,6 +100,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
         },
       ],
     }))
+    setExpandedVolumeId(volumeId)
     setCreateDialog(undefined)
   }
 
@@ -124,6 +132,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
       activeChapterId: chapterId,
     }))
     props.onSetMainView('chapter')
+    setExpandedVolumeId(volume.id)
     setCreateDialog(undefined)
   }
 
@@ -251,15 +260,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
   }
 
   function toggleVolume(volumeId: string) {
-    setCollapsedVolumeIds((current) => {
-      const next = new Set(current)
-      if (next.has(volumeId)) {
-        next.delete(volumeId)
-      } else {
-        next.add(volumeId)
-      }
-      return next
-    })
+    setExpandedVolumeId((current) => (current === volumeId ? undefined : volumeId))
   }
 
   function renameChapter(chapter: Chapter) {
@@ -521,7 +522,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
               const chaptersInVolume = volumeChapters(volume.id)
 
               return (
-                <div className={`volume-block ${collapsedVolumeIds.has(volume.id) ? 'collapsed' : ''}`} key={volume.id}>
+                <div className={`volume-block ${expandedVolumeId !== volume.id ? 'collapsed' : ''}`} key={volume.id}>
                   <div
                     className="volume-title"
                     title="点击折叠或展开"
@@ -546,7 +547,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
                       </button>
                     </div>
                   </div>
-                  {!collapsedVolumeIds.has(volume.id) && (
+                  {expandedVolumeId === volume.id && (
                     <div className="chapter-list-scroll">
                       {chaptersInVolume.length === 0 && (
                         <button
