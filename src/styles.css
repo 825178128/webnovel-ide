@@ -495,7 +495,7 @@ textarea {
 .dialog {
   display: grid;
   gap: 0;
-  width: min(560px, 100%);
+  width: min(540px, 100%);
   max-height: calc(100vh - 48px);
   overflow: hidden;
   border: 1px solid var(--border);
@@ -527,17 +527,41 @@ textarea {
 
 .dialog header {
   border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  padding: 18px 20px;
+  background: color-mix(in srgb, var(--surface) 88%, var(--surface-muted));
+  padding: 16px 20px;
 }
 
 .dialog footer {
+  justify-content: flex-end;
   padding-top: 4px;
 }
 
 .dialog h2 {
   margin: 0;
-  font-size: 23px;
+  font-size: 20px;
+}
+
+.dialog header .ghost-button {
+  border-color: var(--border);
+  background: var(--surface-muted);
+  color: var(--muted-strong);
+  padding: 7px 10px;
+}
+
+.dialog header .ghost-button:hover:not(:disabled) {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: none;
+}
+
+.dialog-body > footer {
+  position: sticky;
+  bottom: -20px;
+  z-index: 1;
+  margin: 4px -20px -20px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  padding: 14px 20px 18px;
 }
 
 .dialog label,
@@ -553,6 +577,10 @@ textarea {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.dialog-body textarea {
+  min-height: 110px;
 }
 
 .settings-note,
@@ -749,6 +777,9 @@ textarea {
 }
 
 .app-settings-dialog > footer {
+  position: static;
+  z-index: auto;
+  margin: 0;
   border-top: 1px solid var(--border);
   background: var(--surface);
   padding: 14px 20px;
@@ -1417,6 +1448,11 @@ textarea {
 }
 
 .context-menu .danger-menu-item {
+  color: var(--danger-text);
+}
+
+.context-menu .danger-menu-item:hover:not(:disabled) {
+  background: var(--danger-soft);
   color: var(--danger-text);
 }
 
