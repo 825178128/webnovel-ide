@@ -41,6 +41,7 @@ export function createInitialState(): WebnovelIDEState {
       theme: 'dark',
       editorFont: 'system-ui',
       editorFontSize: 16,
+      editorLineHeight: 2,
       updatedAt: timestamp,
     },
   }

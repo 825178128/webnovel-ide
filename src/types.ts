@@ -38,6 +38,7 @@ export interface AppSettings {
   theme: AppTheme
   editorFont?: string
   editorFontSize?: number
+  editorLineHeight?: number
   updatedAt?: string
 }
 

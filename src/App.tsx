@@ -69,6 +69,11 @@ function AppInner() {
           onCloseAppSettings={() => setAppSettingsOpen(false)}
           onSubmitProject={createProject}
         />
+        {appSettingsOpen && (
+          <AppSettingsDialog
+            onClose={() => setAppSettingsOpen(false)}
+          />
+        )}
       </div>
     )
   }

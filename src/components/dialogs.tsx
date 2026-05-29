@@ -211,6 +211,7 @@ export function AppSettingsDialog(props: {
   const [theme, setTheme] = useState<AppTheme>(state.appSettings?.theme ?? 'dark')
   const [editorFont, setEditorFont] = useState(state.appSettings?.editorFont ?? 'system-ui')
   const [editorFontSize, setEditorFontSize] = useState(state.appSettings?.editorFontSize ?? 16)
+  const [editorLineHeight, setEditorLineHeight] = useState(state.appSettings?.editorLineHeight ?? 2)
   const [provider, setProvider] = useState(state.aiConfig?.provider ?? 'mock')
   const [apiKey, setApiKey] = useState(state.aiConfig?.apiKey ?? '')
   const [model, setModel] = useState(state.aiConfig?.model ?? 'local-prototype')
@@ -224,6 +225,7 @@ export function AppSettingsDialog(props: {
         theme,
         editorFont,
         editorFontSize,
+        editorLineHeight,
         updatedAt: nowIso(),
       },
       aiConfig: {
@@ -320,6 +322,22 @@ export function AppSettingsDialog(props: {
                           {size}px
                         </option>
                       ))}
+                    </select>
+                  </label>
+                </div>
+                <div className="form-grid" style={{ marginTop: '12px' }}>
+                  <label className="field-block">
+                    行间距
+                    <select
+                      value={editorLineHeight}
+                      onChange={(event) => setEditorLineHeight(Number(event.target.value))}
+                    >
+                      <option value={1.5}>1.5</option>
+                      <option value={1.8}>1.8</option>
+                      <option value={2.0}>2.0</option>
+                      <option value={2.2}>2.2</option>
+                      <option value={2.5}>2.5</option>
+                      <option value={3.0}>3.0</option>
                     </select>
                   </label>
                 </div>
