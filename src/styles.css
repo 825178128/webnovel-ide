@@ -1961,6 +1961,48 @@ textarea {
   pointer-events: none;
 }
 
+/* ---- Entity Mention ---- */
+
+.entity-mention {
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 0 1px;
+  transition: background 0.15s;
+}
+.entity-mention:hover {
+  filter: brightness(1.2);
+}
+.entity-character {
+  background: rgba(59, 130, 246, 0.15);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+}
+.entity-setting {
+  background: rgba(16, 185, 129, 0.15);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.entity-tooltip {
+  position: fixed;
+  z-index: 200;
+  max-width: 280px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.entity-tooltip span:first-child {
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
 /* ---- Slash Command Popup ---- */
 
 .slash-command-popup {

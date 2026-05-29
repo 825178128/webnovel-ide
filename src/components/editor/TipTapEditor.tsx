@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
+import { Extension } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import type { ChapterStatus, Character, Setting } from '../../types'
@@ -9,6 +10,7 @@ import { SlashCommandPopup } from './SlashCommandPopup'
 import { ContextPopover } from './ContextPopover'
 import { getSlashCommandItems, type SlashCommandItem } from './commands'
 import { textToTipTapHtml } from './htmlUtils'
+import { createEntityPlugin, ENTITY_KEY } from './entityPlugin'
 
 interface TipTapEditorProps {
   contentKey: string
@@ -50,6 +52,22 @@ export function TipTapEditor(props: TipTapEditorProps) {
   useEffect(() => { slashMenuRef.current = slashMenu }, [slashMenu])
   useEffect(() => { selectedIndexRef.current = selectedIndex }, [selectedIndex])
 
+  // Entity mention detection — stable ref + extension, so the ProseMirror
+  // plugin is part of the initial config and never re-registered.
+  const entityDataRef = useRef({ characters: props.characters, settings: props.settings })
+  useEffect(() => {
+    entityDataRef.current = { characters: props.characters, settings: props.settings }
+  }, [props.characters, props.settings])
+
+  const entityExtension = useMemo(() =>
+    Extension.create({
+      name: 'entityMention',
+      addProseMirrorPlugins() {
+        return [createEntityPlugin(entityDataRef)]
+      },
+    }),
+  [])
+
   const allItems = getSlashCommandItems(props.characters, props.settings)
 
   function getFilteredItems(): SlashCommandItem[] {
@@ -69,6 +87,7 @@ export function TipTapEditor(props: TipTapEditorProps) {
       Placeholder.configure({
         placeholder: '开始写这一章...',
       }),
+      entityExtension,
     ],
     content: textToTipTapHtml(props.content),
     onUpdate: ({ editor }) => {
@@ -119,6 +138,53 @@ export function TipTapEditor(props: TipTapEditorProps) {
   useEffect(() => {
     return () => editor?.destroy()
   }, [editor])
+
+  // Force entity decorations to rebuild when character/setting data changes
+  useEffect(() => {
+    if (!editor) return
+    const tr = editor.state.tr.setMeta(ENTITY_KEY, {})
+    editor.view.dispatch(tr)
+  }, [editor, props.characters, props.settings])
+
+  const [entityHover, setEntityHover] = useState<{
+    name: string
+    type: 'character' | 'setting'
+    top: number
+    left: number
+  } | null>(null)
+
+  function handleEditorMouseOver(event: React.MouseEvent) {
+    const target = event.target as HTMLElement
+    const entitySpan = target.closest('.entity-mention') as HTMLElement | null
+    if (!entitySpan) {
+      setEntityHover(null)
+      return
+    }
+    const name = entitySpan.getAttribute('data-entity')
+    if (!name) { setEntityHover(null); return }
+    const isChar = props.characters.some((c) => c.name === name)
+    const isSetting = props.settings.some((s) => s.title === name)
+    if (!isChar && !isSetting) { setEntityHover(null); return }
+    const rect = entitySpan.getBoundingClientRect()
+    setEntityHover({
+      name,
+      type: isChar ? 'character' : 'setting',
+      top: rect.bottom + 4,
+      left: rect.left,
+    })
+  }
+
+  function getHoverEntitySummary(): string {
+    if (!entityHover) return ''
+    if (entityHover.type === 'character') {
+      const c = props.characters.find((ch) => ch.name === entityHover.name)
+      if (!c) return ''
+      return `${c.name}${c.role ? ` · ${c.role}` : ''}${c.faction ? ` (${c.faction})` : ''}${c.personality ? `\n${c.personality}` : ''}`
+    }
+    const s = props.settings.find((st) => st.title === entityHover.name)
+    if (!s) return ''
+    return `${s.title}\n${s.content.slice(0, 120)}`
+  }
 
   function updateSlashMenu() {
     if (!editor) return
@@ -227,13 +293,20 @@ export function TipTapEditor(props: TipTapEditorProps) {
         onStatusChange={props.onStatusChange}
       />
       <EditorToolbar editor={editor} />
-      <div className="editor-content-area" style={{
+      <div className="editor-content-area" onMouseOver={handleEditorMouseOver} style={{
         fontFamily: props.editorFont || undefined,
         lineHeight: props.editorLineHeight ?? 2,
         '--editor-font-size': props.editorFontSize ? `${props.editorFontSize}px` : undefined,
       } as React.CSSProperties}>
         <EditorContent editor={editor} />
       </div>
+      {entityHover && (
+        <div className="entity-tooltip" style={{ top: entityHover.top, left: entityHover.left }}>
+          {getHoverEntitySummary().split('\n').map((line, i) => (
+            <span key={i}>{line}</span>
+          ))}
+        </div>
+      )}
       {slashMenu && (
         <SlashCommandPopup
           items={filteredItems}
