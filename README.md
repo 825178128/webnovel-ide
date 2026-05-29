@@ -1,85 +1,76 @@
 # Webnovel IDE
 
-面向中文网文作者、工作室与编辑协作场景的商业级长篇连载创作 IDE。
+面向中文网文作者的长篇连载创作 IDE。像写代码一样管理你的小说——结构化组织章节、人物、设定，提供沉浸式编辑体验。
 
-## Project Goal
+## 功能
 
-构建一个能支撑网文从立项、设定、大纲、章节写作、AI 辅助、连续性检查、发布准备到数据反馈的专业创作平台。
+- **所见即所得编辑器** — 基于 TipTap (ProseMirror) 的富文本编辑，支持格式工具栏、斜杠命令补全
+- **素材管理** — 人物卡、设定资料库，支持关联到章节
+- **写作辅助** — 角色/设定名编辑器内自动高亮，悬停查看摘要
+- **日更追踪** — 自动统计每日写作字数，支持设定日更目标
+- **项目管理** — 多作品管理，卷/章分级结构，拖拽排序
+- **双主题** — 专业深色 + 清爽浅色，自由切换
+- **导出** — 支持 TXT / Markdown 整本导出
+- **AI 辅助** — 续写/润色/总结/改写（支持接入 OpenAI 兼容 API）
 
-产品的长期目标不是做一个简单的 AI 续写工具，而是做一个围绕“长期连载生产”的创作操作系统。
+## 技术栈
 
-## Product Principles
+| 层 | 选型 |
+|---|---|
+| 框架 | React 19 + TypeScript + Vite 7 |
+| 编辑器 | @tiptap/react v3 (ProseMirror) |
+| 状态 | React Context + useReducer |
+| 持久化 | localStorage（500ms 防抖自动保存） |
+| 样式 | 纯 CSS（CSS 自定义属性双主题） |
 
-- 作者掌控方向，AI 作为副驾驶。
-- 长篇连续性优先于短文本生成。
-- 写作流程优先于功能堆叠。
-- 商业化结果优先于单次灵感体验。
-- 每一步决策沉淀为可追溯文件。
-
-## Current Phase
-
-V1 UI 原型完善。
-
-当前 `v1-development` 分支主目标是完成商业级网文 IDE 的 UI 原型、主题体系、布局与交互壳验收。具体业务功能模块不在本分支深入实现。
-
-当前已产出：
-
-- [需求分析与优先级](D:/codex/webnovel-ide/docs/product/01-requirements-analysis.md)
-- [MVP 范围与验收标准](D:/codex/webnovel-ide/docs/product/02-mvp-scope.md)
-- [用户流程与页面流转](D:/codex/webnovel-ide/docs/product/03-user-workflows.md)
-- [UI 信息架构](D:/codex/webnovel-ide/docs/product/04-ui-information-architecture.md)
-- [V1 UI 验收标准](D:/codex/webnovel-ide/docs/product/05-v1-ui-acceptance-criteria.md)
-- [技术栈选型](D:/codex/webnovel-ide/docs/architecture/01-tech-stack.md)
-- [MVP 数据模型](D:/codex/webnovel-ide/docs/architecture/02-data-model.md)
-- [V1 UI 阶段总结](D:/codex/webnovel-ide/docs/release/2026-05-28-v1-ui-stage-summary.md)
-- [V1 UI 验收报告](D:/codex/webnovel-ide/docs/release/2026-05-28-v1-ui-acceptance-report.md)
-- [V1 UI 文件归档索引](D:/codex/webnovel-ide/docs/release/2026-05-28-v1-ui-file-archive.md)
-- [V1 UI 后续开发任务](D:/codex/webnovel-ide/docs/release/2026-05-28-post-ui-roadmap.md)
-
-## V1 UI Acceptance
-
-`v1-development` 分支已完成 V1 UI 原型阶段验收。
-
-验收结论：
-
-- P0 已清零。
-- P1 已清零。
-- P2 进入后续 UI polish 或功能分支。
-- 当前分支可作为 V1 UI 基线合并到主分支。
-
-## Local Development
-
-安装依赖：
+## 快速开始
 
 ```bash
 npm install
+npm run dev        # 启动开发服务器 → http://localhost:5174
+npm run build      # 生产构建
+npm run test:data-store  # 数据层冒烟测试
 ```
 
-启动开发服务器：
+首次启动后可通过「载入演示数据」按钮体验完整功能流程。
 
-```bash
-npm run dev
+## 项目结构
+
+```
+src/
+├── data/             # 数据层（store + repositories + migrations）
+│   ├── DataContext.tsx    # 核心状态管理
+│   ├── store.ts           # 创建/加载/保存/重置
+│   ├── migrations.ts      # 数据迁移兼容
+│   ├── repositories/      # 7 个仓储操作文件
+│   └── fixtures/          # 演示数据
+├── components/       # UI 组件
+│   ├── editor/            # 编辑器核心（TipTap + 插件）
+│   │   ├── TipTapEditor.tsx
+│   │   ├── EditorToolbar.tsx
+│   │   ├── SlashCommandPopup.tsx
+│   │   ├── entityPlugin.ts   # 实体高亮 ProseMirror 插件
+│   │   └── ...
+│   ├── dialogs.tsx        # 所有弹窗
+│   ├── ContextPanel.tsx   # 右侧面板
+│   └── forms.tsx          # 表单组件
+├── pages/             # 页面
+│   ├── ProjectsPage.tsx   # 作品库
+│   └── WorkspacePage.tsx  # 三栏 IDE 工作台
+├── services/          # 服务层
+└── types.ts           # 全部 TypeScript 类型
 ```
 
-如果默认端口被旧项目占用，可以指定端口：
+## 数据模型
 
-```bash
-npm run dev -- --host 127.0.0.1 --port 5180 --strictPort
-```
+核心实体：Project → Volume → Chapter + Character + Setting，通过关联表建立多对多关系。所有状态集中管理，自动持久化到 localStorage。
 
-构建验证：
+详细数据模型见 [ONBOARDING.md](ONBOARDING.md)。
 
-```bash
-npm run build
-```
+## 截图
 
-## Planned Traceable Documents
+（待补充）
 
-- `docs/product/01-requirements-analysis.md`: 需求分析与优先级
-- `docs/architecture/01-tech-stack.md`: 技术栈选型
-- `docs/product/02-mvp-scope.md`: MVP 范围
-- `docs/product/03-user-workflows.md`: 核心用户流程
-- `docs/product/04-ui-information-architecture.md`: UI 信息架构
-- `docs/architecture/02-data-model.md`: 数据模型
-- `docs/architecture/03-ai-context-system.md`: AI 上下文与长篇记忆系统
-- `docs/migration/01-existing-assets-audit.md`: 旧项目可迁移资产盘点
+## 许可
+
+MIT
