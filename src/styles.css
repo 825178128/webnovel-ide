@@ -1153,6 +1153,22 @@ textarea {
   padding-bottom: 0;
 }
 
+/* ---- Collapsible Sidebar Sections ---- */
+
+.sidebar-section.collapsible .sidebar-heading {
+  cursor: pointer;
+  user-select: none;
+}
+.sidebar-section.collapsible .sidebar-heading h2 .icon {
+  transition: transform 0.16s ease;
+}
+.sidebar-section.collapsible.collapsed .sidebar-heading h2 .icon {
+  transform: rotate(-90deg);
+}
+.sidebar-section.collapsible.collapsed .collapsible-content {
+  display: none;
+}
+
 .sidebar-heading,
 .volume-title {
   display: flex;
@@ -1333,6 +1349,26 @@ textarea {
 
 .chapter-link small {
   color: var(--sidebar-muted);
+}
+
+.sidebar-search {
+  display: block;
+  width: calc(100% - 8px);
+  margin: 4px 4px 0;
+  padding: 6px 8px;
+  border: 1px solid var(--sidebar-border);
+  border-radius: var(--radius-sm);
+  background: var(--sidebar-active);
+  color: var(--text);
+  font-size: 12px;
+  outline: none;
+  box-sizing: border-box;
+}
+.sidebar-search::placeholder {
+  color: var(--sidebar-muted);
+}
+.sidebar-search:focus {
+  border-color: var(--accent);
 }
 
 .sidebar-empty,

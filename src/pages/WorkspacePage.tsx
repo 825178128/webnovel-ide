@@ -95,6 +95,10 @@ export function WorkspacePage(props: WorkspacePageProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [expandedVolumeId, setExpandedVolumeId] = useState<string | undefined>(props.chapter?.volumeId)
   const [exportMenuOpen, setExportMenuOpen] = useState(false)
+  const [characterSearch, setCharacterSearch] = useState('')
+  const [settingSearch, setSettingSearch] = useState('')
+  const [characterExpanded, setCharacterExpanded] = useState(true)
+  const [settingExpanded, setSettingExpanded] = useState(true)
   const [draggingChapterId, setDraggingChapterId] = useState<string>()
   const [dragOverChapterId, setDragOverChapterId] = useState<string>()
   const [volumeMenu, setVolumeMenu] = useState<VolumeMenuState>()
@@ -329,6 +333,15 @@ export function WorkspacePage(props: WorkspacePageProps) {
   const todayWords = state.appSettings?.dailyWordCount?.[today] ?? 0
   const dailyTarget = props.project.dailyWordTarget
 
+  const qc = characterSearch.toLowerCase()
+  const qs = settingSearch.toLowerCase()
+  const filteredCharacters = qc
+    ? projectCharacters.filter((c) => c.name.toLowerCase().includes(qc) || (c.role && c.role.toLowerCase().includes(qc)))
+    : projectCharacters
+  const filteredSettings = qs
+    ? projectSettings.filter((s) => s.title.toLowerCase().includes(qs))
+    : projectSettings
+
   const workspaceModeLabel =
     props.mainView === 'chapter' ? '章节编辑' : props.mainView === 'character' ? '人物卡' : '资料卡'
   const activeResourceLabel =
@@ -559,26 +572,38 @@ export function WorkspacePage(props: WorkspacePageProps) {
           )}
         </section>
 
-        <section className="sidebar-section">
-          <div className="sidebar-heading">
+        <section className={`sidebar-section collapsible${!characterExpanded ? ' collapsed' : ''}`}>
+          <div className="sidebar-heading" onClick={() => setCharacterExpanded((v) => !v)}>
             <h2>
-              <Icon name="users" />
+              <Icon name="arrow-down" size={13} />
               <span>人物</span>
               <strong>{projectCharacters.length}</strong>
             </h2>
             {projectCharacters.length > 0 && (
-              <button className="icon-button" title="新建人物" onClick={() => setCreateDialog({ type: 'character' })}>
+              <button className="icon-button" title="新建人物" onClick={(e) => { e.stopPropagation(); setCreateDialog({ type: 'character' }) }}>
                 <Icon name="plus" />
               </button>
             )}
           </div>
+          {projectCharacters.length > 0 && (
+            <input
+              className="sidebar-search"
+              type="text"
+              placeholder="搜索人物..."
+              value={characterSearch}
+              onChange={(e) => { setCharacterSearch(e.target.value); setCharacterExpanded(true) }}
+            />
+          )}
+          <div className="collapsible-content">
           {projectCharacters.length === 0 ? (
             <button className="sidebar-empty-action" onClick={() => setCreateDialog({ type: 'character' })}>
               <Icon name="plus" />
               <span>添加主要人物</span>
             </button>
+          ) : filteredCharacters.length === 0 ? (
+            <div className="sidebar-empty">无匹配人物</div>
           ) : (
-            projectCharacters.map((character) => (
+            filteredCharacters.map((character) => (
               <button
                 className={`plain-list-item ${character.id === selectedCharacter?.id ? 'active' : ''}`}
                 key={character.id}
@@ -589,28 +614,41 @@ export function WorkspacePage(props: WorkspacePageProps) {
               </button>
             ))
           )}
+          </div>
         </section>
 
-        <section className="sidebar-section">
-          <div className="sidebar-heading">
+        <section className={`sidebar-section collapsible${!settingExpanded ? ' collapsed' : ''}`}>
+          <div className="sidebar-heading" onClick={() => setSettingExpanded((v) => !v)}>
             <h2>
-              <Icon name="database" />
+              <Icon name="arrow-down" size={13} />
               <span>资料库</span>
               <strong>{projectSettings.length}</strong>
             </h2>
             {projectSettings.length > 0 && (
-              <button className="icon-button" title="新增资料" onClick={() => setCreateDialog({ type: 'setting' })}>
+              <button className="icon-button" title="新增资料" onClick={(e) => { e.stopPropagation(); setCreateDialog({ type: 'setting' }) }}>
                 <Icon name="plus" />
               </button>
             )}
           </div>
+          {projectSettings.length > 0 && (
+            <input
+              className="sidebar-search"
+              type="text"
+              placeholder="搜索资料..."
+              value={settingSearch}
+              onChange={(e) => { setSettingSearch(e.target.value); setSettingExpanded(true) }}
+            />
+          )}
+          <div className="collapsible-content">
           {projectSettings.length === 0 ? (
             <button className="sidebar-empty-action" onClick={() => setCreateDialog({ type: 'setting' })}>
               <Icon name="plus" />
               <span>添加设定资料</span>
             </button>
+          ) : filteredSettings.length === 0 ? (
+            <div className="sidebar-empty">无匹配资料</div>
           ) : (
-            projectSettings.map((setting) => (
+            filteredSettings.map((setting) => (
               <button
                 className={`plain-list-item ${setting.id === selectedSetting?.id ? 'active' : ''}`}
                 key={setting.id}
@@ -621,6 +659,7 @@ export function WorkspacePage(props: WorkspacePageProps) {
               </button>
             ))
           )}
+          </div>
         </section>
 
       </aside>
