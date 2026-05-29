@@ -32,7 +32,7 @@ import {
 import { useDataStore } from '../data/DataContext'
 import { buildBookExport, type ExportFormat } from '../services/exportService'
 import type { Chapter, Character, Project, Setting, Volume } from '../types'
-import { downloadText } from '../utils'
+import { downloadText, nowIso } from '../utils'
 
 export type MainView = 'chapter' | 'character' | 'setting'
 
@@ -112,6 +112,35 @@ export function WorkspacePage(props: WorkspacePageProps) {
       setExpandedVolumeId(props.chapter.volumeId)
     }
   }, [props.chapter?.volumeId])
+
+  const lastTotalRef = useRef(0)
+  const initializedRef = useRef(false)
+
+  useEffect(() => {
+    const currentTotal = state.chapters.reduce((sum, ch) => sum + ch.wordCount, 0)
+    if (!initializedRef.current) {
+      lastTotalRef.current = currentTotal
+      initializedRef.current = true
+      return
+    }
+    const lastTotal = lastTotalRef.current
+    lastTotalRef.current = currentTotal
+    if (currentTotal > lastTotal) {
+      const delta = currentTotal - lastTotal
+      const today = new Date().toISOString().slice(0, 10)
+      patchState((current) => ({
+        ...current,
+        appSettings: {
+          ...current.appSettings,
+          dailyWordCount: {
+            ...current.appSettings?.dailyWordCount,
+            [today]: (current.appSettings?.dailyWordCount?.[today] ?? 0) + delta,
+          },
+          updatedAt: nowIso(),
+        },
+      }))
+    }
+  }, [state.chapters])
 
   function createVolume(form: Pick<Volume, 'title' | 'summary'>) {
     const result = createVolumeRecord(state, props.project.id, form)
@@ -295,6 +324,10 @@ export function WorkspacePage(props: WorkspacePageProps) {
 
     props.onSetMainView('setting')
   }
+
+  const today = new Date().toISOString().slice(0, 10)
+  const todayWords = state.appSettings?.dailyWordCount?.[today] ?? 0
+  const dailyTarget = props.project.dailyWordTarget
 
   const workspaceModeLabel =
     props.mainView === 'chapter' ? '章节编辑' : props.mainView === 'character' ? '人物卡' : '资料卡'
@@ -650,6 +683,9 @@ export function WorkspacePage(props: WorkspacePageProps) {
             {isSaving ? '保存中...' : '已保存'}
           </span>
           <span>{workspaceModeLabel}</span>
+          <span className="statusbar-daily">
+            今日 {todayWords} 字{dailyTarget ? ` / ${dailyTarget}` : ''}
+          </span>
         </div>
         <div className="statusbar-right">
           <span>{props.chapter?.wordCount ?? 0} 字</span>

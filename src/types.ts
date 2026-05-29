@@ -39,6 +39,7 @@ export interface AppSettings {
   editorFont?: string
   editorFontSize?: number
   editorLineHeight?: number
+  dailyWordCount?: Record<string, number>
   updatedAt?: string
 }
 
