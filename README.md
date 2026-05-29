@@ -65,12 +65,6 @@ src/
 
 核心实体：Project → Volume → Chapter + Character + Setting，通过关联表建立多对多关系。所有状态集中管理，自动持久化到 localStorage。
 
-详细数据模型见 [ONBOARDING.md](ONBOARDING.md)。
-
-## 截图
-
-（待补充）
-
 ## 许可
 
 MIT
