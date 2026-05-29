@@ -1,10 +1,11 @@
-import { createContext, useContext, useReducer, useEffect, useRef } from 'react'
+import { createContext, useContext, useReducer, useEffect, useRef, useState } from 'react'
 import type { WebnovelIDEState } from '../types'
 import { loadState as loadDataState, saveState as saveDataState } from './store'
 
 const DataContext = createContext<{
   state: WebnovelIDEState
   patchState: (updater: (current: WebnovelIDEState) => WebnovelIDEState) => void
+  isSaving: boolean
 } | null>(null)
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
@@ -13,16 +14,22 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     undefined!,
     () => loadDataState(),
   )
-  const saveTimer = useRef<ReturnType<typeof setTimeout>>()
+  const [isSaving, setIsSaving] = useState(false)
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
     clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => saveDataState(state), 500)
+    setIsSaving(true)
+    saveTimer.current = setTimeout(() => {
+      saveDataState(state)
+      setIsSaving(false)
+      saveTimer.current = undefined
+    }, 500)
     return () => clearTimeout(saveTimer.current)
   }, [state])
 
   return (
-    <DataContext.Provider value={{ state, patchState: dispatch }}>
+    <DataContext.Provider value={{ state, patchState: dispatch, isSaving }}>
       {children}
     </DataContext.Provider>
   )

@@ -1267,14 +1267,6 @@ textarea {
   scroll-behavior: smooth;
 }
 
-.chapter-list-scroll::-webkit-scrollbar {
-  width: 6px;
-}
-
-.chapter-list-scroll::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--muted) 34%, transparent);
-}
 
 .inline-actions {
   display: flex;
@@ -1378,15 +1370,23 @@ textarea {
 .main-panel {
   grid-column: 3;
   grid-row: 2 / 3;
-  overflow: auto;
+  min-width: 0;
   background: var(--main-bg);
+}
+
+/* Non-chapter views: scroll the entire panel */
+.main-panel:not(.main-panel-chapter) {
+  overflow: auto;
   padding: 38px 24px 28px;
 }
 
-.main-panel-chapter {
+/* Chapter view: flex layout delegating scroll to the editor */
+.main-panel.main-panel-chapter {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
-  background: var(--editor-surface);
   padding: 0;
+  background: var(--editor-surface);
 }
 
 .workspace.sidebar-collapsed .main-panel {
@@ -1394,9 +1394,10 @@ textarea {
 }
 
 .editor-panel {
-  display: grid;
-  min-height: 100%;
-  margin: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
   background: var(--editor-surface);
 }
 
@@ -1439,50 +1440,6 @@ textarea {
   line-height: 1.6;
 }
 
-.chapter-title-input {
-  border: 0;
-  border-bottom: 1px solid var(--border);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  color: var(--text);
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: 0;
-  padding: 8px 0 10px;
-}
-
-.chapter-title-input::placeholder {
-  color: var(--muted);
-}
-
-.chapter-title-input:focus {
-  box-shadow: none;
-}
-
-.chapter-content {
-  min-height: 100%;
-  border: 0;
-  border-radius: 0;
-  background:
-    linear-gradient(90deg, var(--editor-surface) 0 54px, var(--border) 54px 55px, transparent 55px),
-    var(--editor-surface);
-  box-shadow: none;
-  color: var(--text);
-  font-size: 18px;
-  line-height: 2;
-  padding: 34px clamp(34px, 6vw, 88px) 40px clamp(76px, 8vw, 112px);
-  resize: none;
-}
-
-.chapter-content::placeholder {
-  color: var(--muted);
-}
-
-.chapter-content:focus {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 42%, transparent);
-}
-
 .context-menu {
   position: fixed;
   z-index: 30;
@@ -1519,19 +1476,6 @@ textarea {
 .context-menu .danger-menu-item:hover:not(:disabled) {
   background: var(--danger-soft);
   color: var(--danger-text);
-}
-
-.editor-panel > .field-block {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--editor-surface);
-  padding: 10px 12px 12px;
-}
-
-.editor-panel > .field-block textarea {
-  border-color: var(--border);
-  background: var(--field-surface);
-  min-height: 74px;
 }
 
 .form-panel {
@@ -1764,4 +1708,394 @@ textarea {
   border-radius: 999px;
   background: var(--success);
   box-shadow: 0 0 0 3px var(--success-soft);
+}
+
+.status-dot-pending {
+  background: var(--brand);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+  animation: status-dot-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes status-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ---- Unified Scrollbar ---- */
+/* Hidden by default, appears on hover over the scrollable area. */
+/* Uses semi-transparent colors matching the theme. */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+}
+
+/* Show scrollbar on hover over the main scrollable areas */
+.project-sidebar:hover::-webkit-scrollbar-thumb,
+.chapter-list-scroll:hover::-webkit-scrollbar-thumb,
+.main-panel:hover::-webkit-scrollbar-thumb,
+.editor-content-area .ProseMirror:hover::-webkit-scrollbar-thumb,
+.context-panel:hover::-webkit-scrollbar-thumb,
+.slash-command-popup:hover::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted) 28%, transparent);
+}
+
+.project-sidebar:hover,
+.chapter-list-scroll:hover,
+.main-panel:hover,
+.editor-content-area .ProseMirror:hover,
+.context-panel:hover,
+.slash-command-popup:hover {
+  scrollbar-color: color-mix(in srgb, var(--muted) 28%, transparent) transparent;
+}
+
+/* Slightly brighter when actively dragging the thumb */
+*::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:active {
+  background: color-mix(in srgb, var(--muted) 42%, transparent) !important;
+}
+
+/* ---- TipTap Editor ---- */
+
+.tip-tap-editor,
+.editor-panel-tiptap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  background: var(--editor-surface);
+}
+
+.editor-content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* EditorContent wrapper div must also flex to pass height to ProseMirror */
+.editor-content-area > div {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-content-area .ProseMirror {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, var(--editor-surface) 0 54px, var(--border) 54px 55px, transparent 55px),
+    var(--editor-surface);
+  box-shadow: none;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 2;
+  padding: 34px clamp(34px, 6vw, 88px) 40px clamp(76px, 8vw, 112px);
+  outline: none;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.editor-header {
+  flex: 0 0 auto;
+  padding: 24px 76px 0 76px;
+  background: var(--editor-surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.editor-header-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.editor-title-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0;
+  padding: 8px 0 10px;
+  min-height: unset;
+}
+
+.editor-title-input::placeholder {
+  color: var(--muted);
+}
+
+.editor-title-input:focus {
+  border-bottom-color: var(--border);
+  box-shadow: none;
+}
+
+.editor-status-select {
+  width: auto;
+  min-width: 100px;
+  min-height: unset;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+.editor-word-count {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.editor-goal-input {
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted-strong);
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 4px 0 10px;
+  min-height: unset;
+  resize: none;
+}
+
+.editor-goal-input::placeholder {
+  color: var(--muted);
+}
+
+.editor-goal-input:focus {
+  box-shadow: none;
+  color: var(--text);
+}
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+  padding: 4px 76px;
+  border-bottom: 1px solid var(--border);
+  background: var(--editor-surface);
+}
+
+.toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-strong);
+  cursor: pointer;
+  font-size: 15px;
+  padding: 0;
+  min-height: unset;
+}
+
+.toolbar-btn:hover:not(:disabled) {
+  background: var(--surface-muted);
+  color: var(--text);
+}
+
+.toolbar-btn.active {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.toolbar-btn em {
+  font-style: italic;
+}
+
+.toolbar-separator {
+  display: inline-block;
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: var(--border);
+}
+
+.editor-content-area .ProseMirror p {
+  margin: 0;
+  text-indent: 2em;
+  line-height: 2;
+}
+
+.editor-content-area .ProseMirror p.is-editor-empty:first-child::before {
+  color: var(--muted);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* ---- Slash Command Popup ---- */
+
+.slash-command-popup {
+  position: fixed;
+  z-index: 50;
+  min-width: 200px;
+  max-width: 320px;
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--chrome-border);
+  border-radius: var(--radius-md);
+  background: var(--chrome-bg);
+  box-shadow: var(--shadow-popover);
+  padding: 6px;
+}
+
+.slash-command-empty {
+  padding: 12px 16px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.slash-command-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 400;
+  font-size: 14px;
+  min-height: unset;
+  padding: 8px 12px;
+  text-align: left;
+  transition: background 100ms ease;
+  transform: none !important;
+}
+
+.slash-command-item:hover,
+.slash-command-item.selected {
+  background: var(--brand-soft);
+}
+
+.slash-command-icon {
+  flex: 0 0 24px;
+  font-size: 16px;
+  text-align: center;
+}
+
+.slash-command-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.slash-command-text strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.slash-command-text small {
+  color: var(--muted);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Context Popover ---- */
+
+.context-popover {
+  position: fixed;
+  z-index: 50;
+  min-width: 180px;
+  max-width: 300px;
+  border: 1px solid var(--chrome-border);
+  border-radius: var(--radius-md);
+  background: var(--chrome-bg);
+  box-shadow: var(--shadow-popover);
+  padding: 12px 16px;
+}
+
+.context-popover-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.context-popover-content strong {
+  font-size: 15px;
+}
+
+.context-popover-content .muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.context-popover-content small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.context-popover-content p {
+  margin: 0;
+  color: var(--muted-strong);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.context-popover-action {
+  margin-top: 4px;
+  border: 1px solid var(--brand);
+  border-radius: var(--radius-sm);
+  background: var(--brand-soft);
+  color: var(--brand);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  min-height: unset;
+  padding: 5px 12px;
+  text-align: center;
+  transition: background 100ms ease;
+  transform: none !important;
+}
+
+.context-popover-action:hover {
+  background: var(--brand);
+  color: #ffffff;
 }

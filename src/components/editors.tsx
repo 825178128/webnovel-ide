@@ -3,11 +3,20 @@ import { useDataStore } from '../data/DataContext'
 import type { Chapter, Character, Setting, SettingCategory, SettingImportance } from '../types'
 import { countWords, nowIso } from '../utils'
 import { TextAreaField, TextField } from './forms'
+import { TipTapEditor } from './editor/TipTapEditor'
+import { stripHtml } from './editor/htmlUtils'
 
 export function ChapterEditor(props: {
   chapter: Chapter
 }) {
-  const { patchState } = useDataStore()
+  const { state, patchState } = useDataStore()
+
+  const projectCharacters = state.characters.filter(
+    (c) => c.projectId === props.chapter.projectId,
+  )
+  const projectSettings = state.settings.filter(
+    (s) => s.projectId === props.chapter.projectId,
+  )
 
   function updateChapter(patch: Partial<Chapter>) {
     const timestamp = nowIso()
@@ -20,7 +29,7 @@ export function ChapterEditor(props: {
               ...chapter,
               ...patch,
               wordCount:
-                typeof patch.content === 'string' ? countWords(patch.content) : chapter.wordCount,
+                typeof patch.content === 'string' ? countWords(stripHtml(patch.content)) : chapter.wordCount,
               updatedAt: timestamp,
             }
           : chapter,
@@ -30,11 +39,19 @@ export function ChapterEditor(props: {
 
   return (
     <section className="editor-panel">
-      <textarea
-        className="chapter-content"
-        value={props.chapter.content}
-        onChange={(event) => updateChapter({ content: event.target.value })}
-        placeholder="开始写这一章..."
+      <TipTapEditor
+        contentKey={props.chapter.id}
+        content={props.chapter.content}
+        title={props.chapter.title}
+        goal={props.chapter.goal ?? ''}
+        status={props.chapter.status}
+        wordCount={props.chapter.wordCount}
+        characters={projectCharacters}
+        settings={projectSettings}
+        onContentChange={(text) => updateChapter({ content: text })}
+        onTitleChange={(title) => updateChapter({ title })}
+        onGoalChange={(goal) => updateChapter({ goal })}
+        onStatusChange={(status) => updateChapter({ status })}
       />
     </section>
   )

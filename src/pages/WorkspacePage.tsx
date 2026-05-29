@@ -76,7 +76,7 @@ export interface WorkspacePageProps {
 }
 
 export function WorkspacePage(props: WorkspacePageProps) {
-  const { state, patchState } = useDataStore()
+  const { state, patchState, isSaving } = useDataStore()
   const projectVolumes = state.volumes
     .filter((volume) => volume.projectId === props.project.id)
     .sort((a, b) => a.order - b.order)
@@ -646,8 +646,8 @@ export function WorkspacePage(props: WorkspacePageProps) {
       <footer className="workspace-statusbar">
         <div className="statusbar-left">
           <span className="save-status">
-            <span className="status-dot" />
-            自动保存
+            <span className={`status-dot ${isSaving ? 'status-dot-pending' : ''}`} />
+            {isSaving ? '保存中...' : '已保存'}
           </span>
           <span>{workspaceModeLabel}</span>
         </div>

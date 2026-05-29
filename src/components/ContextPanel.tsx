@@ -68,13 +68,15 @@ export function ContextPanel(props: {
 
   function insertResult() {
     if (!props.chapter || !result) return
+    const chapterId = props.chapter.id
 
-    patchState((current) => appendChapterContent(current, props.chapter!.id, result))
+    patchState((current) => appendChapterContent(current, chapterId, result))
   }
 
   function updateChapter(patch: Partial<Chapter>) {
     if (!props.chapter) return
-    patchState((current) => updateChapterRecord(current, props.chapter!.id, patch))
+    const chapterId = props.chapter.id
+    patchState((current) => updateChapterRecord(current, chapterId, patch))
   }
 
   const assistantTitle =

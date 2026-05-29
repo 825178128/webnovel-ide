@@ -2,12 +2,18 @@ import type { Chapter, Project, Volume } from '../types'
 
 export type ExportFormat = 'txt' | 'md'
 
+function plainText(html: string): string {
+  return html.replace(/<[^>]*>/g, '').trim()
+}
+
 export function buildChapterExport(chapter: Chapter, format: ExportFormat): string {
+  const text = plainText(chapter.content)
+
   if (format === 'md') {
-    return `# ${chapter.title}\n\n${chapter.content.trim()}\n`
+    return `# ${chapter.title}\n\n${text}\n`
   }
 
-  return `${chapter.title}\n\n${chapter.content.trim()}\n`
+  return `${chapter.title}\n\n${text}\n`
 }
 
 export function buildBookExport(
