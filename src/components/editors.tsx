@@ -17,6 +17,7 @@ export function ChapterEditor(props: {
   const projectSettings = state.settings.filter(
     (s) => s.projectId === props.chapter.projectId,
   )
+  const { editorFont, editorFontSize } = state.appSettings ?? {}
 
   function updateChapter(patch: Partial<Chapter>) {
     const timestamp = nowIso()
@@ -48,6 +49,8 @@ export function ChapterEditor(props: {
         wordCount={props.chapter.wordCount}
         characters={projectCharacters}
         settings={projectSettings}
+        editorFont={editorFont}
+        editorFontSize={editorFontSize}
         onContentChange={(text) => updateChapter({ content: text })}
         onTitleChange={(title) => updateChapter({ title })}
         onGoalChange={(goal) => updateChapter({ goal })}

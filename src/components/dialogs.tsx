@@ -209,6 +209,8 @@ export function AppSettingsDialog(props: {
   const { state, patchState } = useDataStore()
   const [activeTab, setActiveTab] = useState<'appearance' | 'ai'>('appearance')
   const [theme, setTheme] = useState<AppTheme>(state.appSettings?.theme ?? 'dark')
+  const [editorFont, setEditorFont] = useState(state.appSettings?.editorFont ?? 'system-ui')
+  const [editorFontSize, setEditorFontSize] = useState(state.appSettings?.editorFontSize ?? 16)
   const [provider, setProvider] = useState(state.aiConfig?.provider ?? 'mock')
   const [apiKey, setApiKey] = useState(state.aiConfig?.apiKey ?? '')
   const [model, setModel] = useState(state.aiConfig?.model ?? 'local-prototype')
@@ -220,6 +222,8 @@ export function AppSettingsDialog(props: {
       ...current,
       appSettings: {
         theme,
+        editorFont,
+        editorFontSize,
         updatedAt: nowIso(),
       },
       aiConfig: {
@@ -286,6 +290,38 @@ export function AppSettingsDialog(props: {
                     <span>清爽浅色</span>
                     <small>适合白天阅读、整理设定和审稿</small>
                   </button>
+                </div>
+                <div className="settings-section-header" style={{ marginTop: '24px' }}>
+                  <h3>编辑器</h3>
+                  <p>字体和字号设置会立即生效。</p>
+                </div>
+                <div className="form-grid">
+                  <label className="field-block">
+                    正文字体
+                    <select value={editorFont} onChange={(event) => setEditorFont(event.target.value)}>
+                      <option value="system-ui" style={{ fontFamily: 'system-ui' }}>系统默认</option>
+                      <option value="'宋体', SimSun, serif" style={{ fontFamily: "'宋体', SimSun, serif" }}>宋体</option>
+                      <option value="'黑体', SimHei, sans-serif" style={{ fontFamily: "'黑体', SimHei, sans-serif" }}>黑体</option>
+                      <option value="'楷体', KaiTi, serif" style={{ fontFamily: "'楷体', KaiTi, serif" }}>楷体</option>
+                      <option value="'微软雅黑', 'Microsoft YaHei', sans-serif" style={{ fontFamily: "'微软雅黑', 'Microsoft YaHei', sans-serif" }}>微软雅黑</option>
+                      <option value="'思源宋体', 'Source Han Serif', serif" style={{ fontFamily: "'思源宋体', 'Source Han Serif', serif" }}>思源宋体</option>
+                      <option value="serif" style={{ fontFamily: 'serif' }}>衬线 (serif)</option>
+                      <option value="sans-serif" style={{ fontFamily: 'sans-serif' }}>无衬线 (sans-serif)</option>
+                    </select>
+                  </label>
+                  <label className="field-block">
+                    正文字号
+                    <select
+                      value={editorFontSize}
+                      onChange={(event) => setEditorFontSize(Number(event.target.value))}
+                    >
+                      {[14, 15, 16, 17, 18, 20, 22].map((size) => (
+                        <option key={size} value={size}>
+                          {size}px
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
               </section>
             )}

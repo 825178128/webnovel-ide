@@ -19,6 +19,8 @@ interface TipTapEditorProps {
   wordCount: number
   characters: Character[]
   settings: Setting[]
+  editorFont?: string
+  editorFontSize?: number
   onContentChange: (text: string) => void
   onTitleChange: (title: string) => void
   onGoalChange: (goal: string) => void
@@ -224,7 +226,10 @@ export function TipTapEditor(props: TipTapEditorProps) {
         onStatusChange={props.onStatusChange}
       />
       <EditorToolbar editor={editor} />
-      <div className="editor-content-area">
+      <div className="editor-content-area" style={{
+        fontFamily: props.editorFont || undefined,
+        '--editor-font-size': props.editorFontSize ? `${props.editorFontSize}px` : undefined,
+      } as React.CSSProperties}>
         <EditorContent editor={editor} />
       </div>
       {slashMenu && (

@@ -39,6 +39,8 @@ export function createInitialState(): WebnovelIDEState {
     },
     appSettings: {
       theme: 'dark',
+      editorFont: 'system-ui',
+      editorFontSize: 16,
       updatedAt: timestamp,
     },
   }
